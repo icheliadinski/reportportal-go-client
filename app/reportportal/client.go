@@ -2,6 +2,7 @@ package reportportal
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -41,7 +42,11 @@ func (c *Client) CheckConnect() error {
 
 	client := http.Client{}
 	resp, err := client.Do(req)
-	defer func() { _ = resp.Body.Close() }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Println("[WARN] failed to close body for response")
+		}
+	}()
 
 	if err != nil {
 		return errors.Wrapf(err, "failed to execute GET request %s", req.URL)
