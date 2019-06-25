@@ -8,20 +8,27 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Client defines a report portal client
 type Client struct {
-	Token    string
-	Endpoint string
-	Launch   string
-	Project  string
+	Token    string `short:"t" long:"token" env:"TOKEN" description:"user token for report portal"`
+	Endpoint string `short:"e" long:"endpoint" env:"ENDPOINT" description:"report portal endpoint"`
+	Launch   string `short:"l" long:"launch" env:"LAUNCH" description:"launch name"`
+	Project  string `short:"p" long:"project" env:"PROJECT" description:"project name"`
 }
 
-func NewClient(endpoint string, token string) (*Client, error) {
-	c := &Client{}
-	c.Endpoint = strings.TrimSuffix(endpoint, "/")
-	c.Token = token
-	return c, nil
+// NewClient defines function constructor for client
+func NewClient(endpoint string, token string, launch string, project string) *Client {
+	e := strings.TrimSuffix(endpoint, "/")
+	t := token
+	return &Client{
+		Endpoint: e,
+		Token:    t,
+		Launch:   launch,
+		Project:  project,
+	}
 }
 
+// CheckConnect defines check for connection
 func (c *Client) CheckConnect() error {
 	url := fmt.Sprintf("%s/user", c.Endpoint)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
