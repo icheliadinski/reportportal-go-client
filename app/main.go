@@ -7,10 +7,7 @@ import (
 )
 
 func main() {
-	c := reportportal.Client{
-		Endpoint: "",
-		Token:    "",
-	}
+	c, err := reportportal.NewClient("", "")
 	if err := c.CheckConnect(); err != nil {
 		fmt.Println(err)
 	}
