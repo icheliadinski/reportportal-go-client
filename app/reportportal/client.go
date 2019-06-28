@@ -56,3 +56,8 @@ func (c *Client) CheckConnect() error {
 	}
 	return nil
 }
+
+// StartLaunch defines launch start
+func (c *Client) StartLaunch(name string, description string, tags []string) error {
+	return nil
+}
