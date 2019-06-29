@@ -14,8 +14,8 @@ import (
 
 // Client defines a report portal client
 type Client struct {
-	Token    string `short:"t" long:"token" env:"TOKEN" description:"user token for report portal"`
 	Endpoint string `short:"e" long:"endpoint" env:"ENDPOINT" description:"report portal endpoint"`
+	Token    string `short:"t" long:"token" env:"TOKEN" description:"user token for report portal"`
 	Launch   string `short:"l" long:"launch" env:"LAUNCH" description:"launch name"`
 	Project  string `short:"p" long:"project" env:"PROJECT" description:"project name"`
 }
@@ -28,7 +28,7 @@ type LaunchInfo struct {
 }
 
 // NewClient defines function constructor for client
-func NewClient(endpoint string, token string, launch string, project string, apiBase string) *Client {
+func NewClient(endpoint string, token string, launch string, project string) *Client {
 	e := strings.TrimSuffix(endpoint, "/")
 	client := &Client{e, token, launch, project}
 	return client
