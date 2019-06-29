@@ -22,8 +22,8 @@ type Client struct {
 
 // LaunchInfo defines launch object
 type LaunchInfo struct {
-	id     string
-	number int64
+	Id     string `json:"id"`
+	Number int64  `json:"number"`
 }
 
 // NewClient defines function constructor for client
@@ -73,7 +73,7 @@ func (c *Client) StartLaunch(name, description string, tags []string, startTime 
 		Name:        name,
 		Description: description,
 		Tags:        tags,
-		StartTime:   startTime.Unix(),
+		StartTime:   startTime.UnixNano(),
 	}
 
 	b, err := json.Marshal(&launch)
@@ -105,11 +105,11 @@ func (c *Client) StartLaunch(name, description string, tags []string, startTime 
 		return "", errors.Errorf("failed with status %s", resp.Status)
 	}
 
-	var li LaunchInfo
-	if err := json.NewDecoder(resp.Body).Decode(&li); err != nil {
+	v := LaunchInfo{}
+	if err := json.NewDecoder(resp.Body).Decode(&v); err != nil {
 		return "", errors.Wrapf(err, "failed to decode response from %s", req.URL)
 	}
-	return li.id, nil
+	return v.Id, nil
 }
 
 // StopLaunch stops the exact launch
@@ -118,7 +118,10 @@ func (c *Client) StopLaunch(id, action, status string, endTime time.Time) error 
 	data := struct {
 		Status  string `json:"status"`
 		EndTime int64  `json:"end_time"`
-	}{status, endTime.Unix()}
+	}{
+		Status:  status,
+		EndTime: endTime.UnixNano(),
+	}
 
 	b, err := json.Marshal(&data)
 	if err != nil {

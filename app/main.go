@@ -24,8 +24,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("Launch Started")
 	if err := c.StopLaunch(id, "finish", "", time.Now()); err != nil {
 		panic(err)
 	}
-	fmt.Println("Launch Started")
+	fmt.Println("Launch Stopped")
 }
