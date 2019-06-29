@@ -113,7 +113,15 @@ func (c *Client) StartLaunch(name, description string, tags []string, startTime 
 }
 
 // StopLaunch stops the exact launch
-func (c *Client) StopLaunch(id, action, status string, endTime time.Time) error {
+func (c *Client) StopLaunch(id, status string, endTime time.Time) error {
+	return c.finalizeLaunch(id, "stop", status, endTime)
+}
+
+func (c *Client) FinishLaunch(id, status string, endTime time.Time) error {
+	return c.finalizeLaunch(id, "finish", status, endTime)
+}
+
+func (c *Client) finalizeLaunch(id, action, status string, endTime time.Time) error {
 	url := fmt.Sprintf("%s/%s/launch/%s/%s", c.Endpoint, c.Project, id, action)
 	data := struct {
 		Status  string `json:"status"`
@@ -151,6 +159,5 @@ func (c *Client) StopLaunch(id, action, status string, endTime time.Time) error 
 	if resp.StatusCode != http.StatusOK {
 		return errors.Errorf("failed with status %s", resp.Status)
 	}
-	fmt.Println("Successfully stopped")
 	return nil
 }
