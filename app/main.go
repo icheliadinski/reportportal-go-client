@@ -20,7 +20,7 @@ func main() {
 	}
 	fmt.Println("Connection checked. Trying start a launch...")
 
-	id, err := c.StartLaunch("Vika", "Horoshaya", nil, time.Now())
+	id, err := c.StartLaunch("Go Launch", "Test go launch", reportportal.ModeDefault, []string{}, time.Now())
 	if err != nil {
 		panic(err)
 	}

@@ -12,6 +12,21 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	ModeDebug   = "DEBUG"
+	ModeDefault = "DEFAULT"
+
+	StatusPassed   = "PASSED"
+	StatusFailed   = "FAILED"
+	StatusStopped  = "STOPPED"
+	StatusSkipped  = "SKIPPED"
+	StatusReseted  = "RESETED"
+	StatusCanceled = "CANCELED"
+
+	ActionStop   = "stop"
+	ActionFinish = "finish"
+)
+
 // Client defines a report portal client
 type Client struct {
 	Endpoint string `short:"e" long:"endpoint" env:"ENDPOINT" description:"report portal endpoint"`
@@ -62,16 +77,18 @@ func (c *Client) CheckConnect() error {
 }
 
 // StartLaunch runs launch
-func (c *Client) StartLaunch(name, description string, tags []string, startTime time.Time) (string, error) {
+func (c *Client) StartLaunch(name, description string, mode string, tags []string, startTime time.Time) (string, error) {
 	url := fmt.Sprintf("%s/%s/launch", c.Endpoint, c.Project)
 	launch := struct {
 		Name        string   `json:"name"`
 		Description string   `json:"description"`
+		Mode        string   `json:"mode"`
 		Tags        []string `json:"tags,omitempty"`
 		StartTime   int64    `json:"start_time"`
 	}{
 		Name:        name,
 		Description: description,
+		Mode:        mode,
 		Tags:        tags,
 		StartTime:   startTime.UnixNano(),
 	}
@@ -114,12 +131,18 @@ func (c *Client) StartLaunch(name, description string, tags []string, startTime 
 
 // StopLaunch stops the exact launch
 func (c *Client) StopLaunch(id, status string, endTime time.Time) error {
-	return c.finalizeLaunch(id, "stop", status, endTime)
+	return c.finalizeLaunch(id, ActionStop, status, endTime)
 }
 
 // FinishLaunch finishes exact launch
 func (c *Client) FinishLaunch(id, status string, endTime time.Time) error {
-	return c.finalizeLaunch(id, "finish", status, endTime)
+	return c.finalizeLaunch(id, ActionFinish, status, endTime)
+}
+
+// UpdateLaunch updates launch info
+func (c *Client) UpdateLaunch(id, description string, tags []string) error {
+	// TODO: Add update
+	return nil
 }
 
 // finalizeLaunch finalizes exact match with specific action
