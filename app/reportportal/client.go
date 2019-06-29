@@ -27,7 +27,7 @@ type LaunchInfo struct {
 }
 
 // NewClient defines function constructor for client
-func NewClient(endpoint string, token string, launch string, project string) *Client {
+func NewClient(endpoint, token, launch, project string) *Client {
 	e := strings.TrimSuffix(endpoint, "/")
 	client := &Client{e, token, launch, project}
 	return client
@@ -62,7 +62,7 @@ func (c *Client) CheckConnect() error {
 }
 
 // StartLaunch runs launch
-func (c *Client) StartLaunch(name string, description string, tags []string, startTime time.Time) (string, error) {
+func (c *Client) StartLaunch(name, description string, tags []string, startTime time.Time) (string, error) {
 	url := fmt.Sprintf("%s/%s/launch", c.Endpoint, c.Project)
 	launch := struct {
 		Name        string   `json:"name"`
@@ -113,6 +113,41 @@ func (c *Client) StartLaunch(name string, description string, tags []string, sta
 }
 
 // StopLaunch stops the exact launch
-func (c *Client) StopLaunch() {
+func (c *Client) StopLaunch(id, action, status string, endTime time.Time) error {
+	url := fmt.Sprintf("%s/%s/launch/%s/%s", c.Endpoint, c.Project, id, action)
+	data := struct {
+		Status  string `json:"status"`
+		EndTime int64  `json:"end_time"`
+	}{status, endTime.Unix()}
 
+	b, err := json.Marshal(&data)
+	if err != nil {
+		return errors.Wrapf(err, "failed to marshal object, %v", data)
+	}
+
+	r := bytes.NewReader(b)
+	req, err := http.NewRequest(http.MethodPut, url, r)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create request to %s", url)
+	}
+
+	auth := fmt.Sprintf("Bearer %s", c.Token)
+	req.Header.Set("Authorization", auth)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := http.Client{}
+	resp, err := client.Do(req)
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Println("[WARN] Failed to close response body")
+		}
+	}()
+	if err != nil {
+		return errors.Wrapf(err, "failed to execute PUT request %s", req.URL)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return errors.Errorf("failed with status %s", resp.Status)
+	}
+	fmt.Println("Successfully stopped")
+	return nil
 }

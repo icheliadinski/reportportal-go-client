@@ -20,7 +20,11 @@ func main() {
 	}
 	fmt.Println("Connection checked. Trying start a launch...")
 
-	if err := c.StartLaunch("Vika", "Horoshaya", nil, time.Now()); err != nil {
+	id, err := c.StartLaunch("Vika", "Horoshaya", nil, time.Now())
+	if err != nil {
+		panic(err)
+	}
+	if err := c.StopLaunch(id, "finish", "", time.Now()); err != nil {
 		panic(err)
 	}
 	fmt.Println("Launch Started")
