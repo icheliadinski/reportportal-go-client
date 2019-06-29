@@ -63,12 +63,18 @@ func (c *Client) CheckConnect() error {
 }
 
 // StartLaunch defines launch start
-func (c *Client) StartLaunch(project string, name string) error {
+func (c *Client) StartLaunch(project string, name string, description string, tags []string, startTime time.Time) error {
 	url := fmt.Sprintf("%s/%s/launch", c.Endpoint, project)
 	launch := struct {
-		Name string
+		Name        string    `json:"name"`
+		Description string    `json:"description"`
+		Tags        []string  `json:"tags"`
+		StartTime   time.Time `json:"start_time"`
 	}{
-		Name: name,
+		Name:        name,
+		Description: description,
+		Tags:        tags,
+		StartTime:   startTime,
 	}
 
 	b, err := json.Marshal(&launch)
