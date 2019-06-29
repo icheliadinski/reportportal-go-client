@@ -20,13 +20,6 @@ type Client struct {
 	Project  string `short:"p" long:"project" env:"PROJECT" description:"project name"`
 }
 
-type LaunchInfo struct {
-	Name        string
-	StartTime   time.Time
-	Description string
-	tags        []string
-}
-
 // NewClient defines function constructor for client
 func NewClient(endpoint string, token string, launch string, project string) *Client {
 	e := strings.TrimSuffix(endpoint, "/")
