@@ -1,6 +1,8 @@
 package reportportal
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -26,15 +28,10 @@ type LaunchInfo struct {
 }
 
 // NewClient defines function constructor for client
-func NewClient(endpoint string, token string, launch string, project string) *Client {
+func NewClient(endpoint string, token string, launch string, project string, apiBase string) *Client {
 	e := strings.TrimSuffix(endpoint, "/")
-	t := token
-	return &Client{
-		Endpoint: e,
-		Token:    t,
-		Launch:   launch,
-		Project:  project,
-	}
+	client := &Client{e, token, launch, project}
+	return client
 }
 
 // CheckConnect defines check for connection
@@ -66,6 +63,40 @@ func (c *Client) CheckConnect() error {
 }
 
 // StartLaunch defines launch start
-func (c *Client) StartLaunch(info LaunchInfo) error {
-	// url := strings.Join()
+func (c *Client) StartLaunch(project string, name string) error {
+	url := fmt.Sprintf("%s/%s/launch", c.Endpoint, project)
+	launch := struct {
+		Name string
+	}{
+		Name: name,
+	}
+
+	b, err := json.Marshal(&launch)
+	if err != nil {
+		return errors.Wrapf(err, "failed to marshal object, %v", launch)
+	}
+
+	r := bytes.NewReader(b)
+	req, err := http.NewRequest(http.MethodPost, url, r)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create request for %s", url)
+	}
+
+	auth := fmt.Sprintf("Bearer %s", c.Token)
+	req.Header.Set("Authorization", auth)
+
+	client := http.Client{}
+	resp, err := client.Do(req)
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Println("[WARN] failed to close body for response")
+		}
+	}()
+	if err != nil {
+		return errors.Wrapf(err, "failed to execute POST request %s", req.URL)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return errors.Errorf("failed with status %s", resp.Status)
+	}
+	return nil
 }
