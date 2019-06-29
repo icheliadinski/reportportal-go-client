@@ -66,15 +66,15 @@ func (c *Client) CheckConnect() error {
 func (c *Client) StartLaunch(name string, description string, tags []string, startTime time.Time) error {
 	url := fmt.Sprintf("%s/%s/launch", c.Endpoint, c.Project)
 	launch := struct {
-		Name        string    `json:"name"`
-		Description string    `json:"description"`
-		Tags        []string  `json:"tags"`
-		StartTime   time.Time `json:"start_time"`
+		Name        string   `json:"name"`
+		Description string   `json:"description"`
+		Tags        []string `json:"tags,omitempty"`
+		StartTime   int64    `json:"start_time"`
 	}{
 		Name:        name,
 		Description: description,
 		Tags:        tags,
-		StartTime:   startTime,
+		StartTime:   startTime.Unix(),
 	}
 
 	b, err := json.Marshal(&launch)
@@ -90,6 +90,7 @@ func (c *Client) StartLaunch(name string, description string, tags []string, sta
 
 	auth := fmt.Sprintf("Bearer %s", c.Token)
 	req.Header.Set("Authorization", auth)
+	req.Header.Set("Content-Type", "application/json")
 
 	client := http.Client{}
 	resp, err := client.Do(req)
@@ -101,7 +102,7 @@ func (c *Client) StartLaunch(name string, description string, tags []string, sta
 	if err != nil {
 		return errors.Wrapf(err, "failed to execute POST request %s", req.URL)
 	}
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusCreated {
 		return errors.Errorf("failed with status %s", resp.Status)
 	}
 	return nil

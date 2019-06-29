@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/icheliadinski/reportportal-go-client/app/reportportal"
 	"github.com/jessevdk/go-flags"
@@ -17,5 +18,10 @@ func main() {
 	if err := c.CheckConnect(); err != nil {
 		panic(err)
 	}
-	fmt.Println("Success")
+	fmt.Println("Connection checked. Trying start a launch...")
+
+	if err := c.StartLaunch("Vika", "Horoshaya", nil, time.Now()); err != nil {
+		panic(err)
+	}
+	fmt.Println("Launch Started")
 }
