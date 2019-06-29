@@ -117,10 +117,12 @@ func (c *Client) StopLaunch(id, status string, endTime time.Time) error {
 	return c.finalizeLaunch(id, "stop", status, endTime)
 }
 
+// FinishLaunch finishes exact launch
 func (c *Client) FinishLaunch(id, status string, endTime time.Time) error {
 	return c.finalizeLaunch(id, "finish", status, endTime)
 }
 
+// finalizeLaunch finalizes exact match with specific action
 func (c *Client) finalizeLaunch(id, action, status string, endTime time.Time) error {
 	url := fmt.Sprintf("%s/%s/launch/%s/%s", c.Endpoint, c.Project, id, action)
 	data := struct {
