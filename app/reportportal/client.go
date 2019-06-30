@@ -140,8 +140,46 @@ func (c *Client) FinishLaunch(id, status string, endTime time.Time) error {
 }
 
 // UpdateLaunch updates launch info
-func (c *Client) UpdateLaunch(id, description string, tags []string) error {
-	// TODO: Add update
+func (c *Client) UpdateLaunch(id, description, mode string, tags []string) error {
+	url := fmt.Sprintf("%s/%s/launch/%s/update", c.Endpoint, c.Project, id)
+	data := struct {
+		Description string   `json:"description"`
+		Mode        string   `json:"mode"`
+		Tags        []string `json:"tags"`
+	}{
+		Description: description,
+		Mode:        mode,
+		Tags:        tags,
+	}
+
+	b, err := json.Marshal(&data)
+	if err != nil {
+		return errors.Wrapf(err, "failed to marshal json %v", data)
+	}
+
+	r := bytes.NewReader(b)
+	req, err := http.NewRequest(http.MethodPut, url, r)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create request for %s", url)
+	}
+
+	auth := fmt.Sprintf("Bearer %s", c.Token)
+	req.Header.Set("Authorization", auth)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := http.Client{}
+	resp, err := client.Do(req)
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Println("[WARN] failed to close body response")
+		}
+	}()
+	if err != nil {
+		return errors.Wrapf(err, "failed to execute PUT request %s", req.URL)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return errors.Errorf("failed with status %s", resp.Status)
+	}
 	return nil
 }
 
