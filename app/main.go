@@ -18,13 +18,22 @@ func main() {
 	if err := c.CheckConnect(); err != nil {
 		panic(err)
 	}
-	fmt.Println("Connection checked. Trying start a launch...")
+	fmt.Println("Connection checked. Trying to start a launch...")
+	time.Sleep(2 * time.Second)
 
-	id, err := c.StartLaunch("Go Launch", "Test go launch", reportportal.ModeDefault, []string{}, time.Now())
+	_, err := c.StartLaunch("Go Launch", "Test go launch", reportportal.ModeDefault, []string{}, time.Now())
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Launch Started")
+	fmt.Println("Launch Started. Updating...")
+	time.Sleep(2 * time.Second)
+
+	if err := c.UpdateLaunch(id, "updated descr", reportportal.ModeDebug, []string{"tag1", "tag2"}); err != nil {
+		panic(err)
+	}
+	fmt.Println("Launch updated. Stopping...")
+	time.Sleep(2 * time.Second)
+
 	if err := c.StopLaunch(id, "", time.Now()); err != nil {
 		panic(err)
 	}
