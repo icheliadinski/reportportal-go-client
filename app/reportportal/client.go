@@ -248,6 +248,12 @@ func (c *Client) StartTestItem(launchId, name, description, itemType, parentId s
 	return v.Id, nil
 }
 
+// FinishTestItem finishes specified test item with specific status
+func (c *Client) FinishTestItem(id, status string, endTime time.Time) error {
+	// TODO: Add implementation
+	return nil
+}
+
 // finalizeLaunch finalizes exact match with specific action
 func (c *Client) finalizeLaunch(id, action, status string, endTime time.Time) error {
 	url := fmt.Sprintf("%s/%s/launch/%s/%s", c.Endpoint, c.Project, id, action)
