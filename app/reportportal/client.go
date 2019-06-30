@@ -41,6 +41,11 @@ type LaunchInfo struct {
 	Number int64  `json:"number"`
 }
 
+type TestItemInfo struct {
+	Id       string `json:"id"`
+	UniqueId string `json:"uniqueId"`
+}
+
 // NewClient defines function constructor for client
 func NewClient(endpoint, token, launch, project string) *Client {
 	e := strings.TrimSuffix(endpoint, "/")
@@ -181,6 +186,66 @@ func (c *Client) UpdateLaunch(id, description, mode string, tags []string) error
 		return errors.Errorf("failed with status %s", resp.Status)
 	}
 	return nil
+}
+
+// StartTestItem starts a test item suite/story/test etc
+func (c *Client) StartTestItem(launchId, name, description, itemType, parentId string, tags []string, startTime time.Time) (string, error) {
+	url := fmt.Sprintf("%s/%s/item/%s", c.Endpoint, c.Project, parentId)
+	data := struct {
+		Name        string   `json:"name"`
+		Description string   `json:"description"`
+		Tags        []string `json:"tags"`
+		StartTime   int64    `json:"start_time"`
+		LaunchId    string   `json:"launch_id"`
+		Type        string   `json:"type"`
+		Parameters  []struct {
+			Key   string `json:"key"`
+			Value string `json:"value"`
+		} `json:"parameters"`
+	}{
+		Name:        name,
+		Description: description,
+		Tags:        tags,
+		StartTime:   startTime.UnixNano(),
+		LaunchId:    launchId,
+		Type:        itemType,
+		Parameters:  nil,
+	}
+
+	b, err := json.Marshal(&data)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to marshal object %v", data)
+	}
+
+	r := bytes.NewReader(b)
+	req, err := http.NewRequest(http.MethodPost, url, r)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to create POST request to %s", url)
+	}
+
+	auth := fmt.Sprintf("Bearer %s", c.Token)
+	req.Header.Set("Authorization", auth)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := http.Client{}
+	resp, err := client.Do(req)
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Println("[WARN] failed to close response body")
+		}
+	}()
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to execute POST request %s", req.URL)
+	}
+	if resp.StatusCode != http.StatusCreated {
+		return "", errors.Errorf("failed with status %s", resp.Status)
+	}
+
+	v := LaunchInfo{}
+	if err := json.NewDecoder(resp.Body).Decode(&v); err != nil {
+		return "", errors.Wrapf(err, "failed to decode response from %s", req.URL)
+	}
+	return v.Id, nil
 }
 
 // finalizeLaunch finalizes exact match with specific action
