@@ -5,3 +5,7 @@ import "testing"
 func TestNewClient(t *testing.T) {
 
 }
+
+func TestStartLaunch(t *testing.T) {
+
+}
