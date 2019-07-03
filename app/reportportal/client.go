@@ -373,8 +373,8 @@ func (c *Client) Log(id, message, level string, time time.Time) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to execute POST request %s", req.URL)
 	}
-	if resp.StatusCode != http.StatusOK {
-		return errors.Errorf("failed with status ", resp.Status)
+	if resp.StatusCode != http.StatusCreated {
+		return errors.Errorf("failed with status %s", resp.Status)
 	}
 	return nil
 }
