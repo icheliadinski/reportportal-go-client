@@ -45,7 +45,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Subitem started. Failing subitem...")
+	fmt.Println("Subitem started. Writing to test item...")
+	time.Sleep(2 * time.Second)
+
+	if err := c.Log(subItem, "my super failed message", reportportal.LevelError, time.Now()); err != nil {
+		panic(err)
+	}
+	fmt.Println("Log sent. Failing subitem...")
 	time.Sleep(2 * time.Second)
 
 	if err := c.FinishTestItem(subItem, reportportal.StatusFailed, time.Now()); err != nil {
