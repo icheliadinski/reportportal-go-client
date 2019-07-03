@@ -34,18 +34,24 @@ func main() {
 	fmt.Println("Launch updated. Adding item...")
 	time.Sleep(2 * time.Second)
 
-	itemId, err := c.StartTestItem(id, "Item", "Item descr", "SUITE", "", []string{"suite"}, time.Now())
+	suiteId, err := c.StartTestItem(id, "Item", "Item descr", "SUITE", "", []string{"suite"}, time.Now())
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("Item started. Creating subitem...")
 	time.Sleep(2 * time.Second)
 
-	_, err = c.StartTestItem(id, "Sub Item", "Sub item descr", "TEST", itemId, []string{"sub"}, time.Now())
+	subItem, err := c.StartTestItem(id, "Sub Item", "Sub item descr", "TEST", suiteId, []string{"sub"}, time.Now())
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Subitem started. Stopping launch...")
+	fmt.Println("Subitem started. Failing subitem...")
+	time.Sleep(2 * time.Second)
+
+	if err := c.FinishTestItem(subItem, reportportal.StatusFailed, time.Now()); err != nil {
+		panic(err)
+	}
+	fmt.Println("Subitem failed. Stopping launch...")
 	time.Sleep(2 * time.Second)
 
 	if err := c.StopLaunch(id, "", time.Now()); err != nil {
