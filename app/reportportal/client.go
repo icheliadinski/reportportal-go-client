@@ -110,7 +110,7 @@ func (c *Client) StartLaunch(name, description string, mode string, tags []strin
 		Description: description,
 		Mode:        mode,
 		Tags:        tags,
-		StartTime:   startTime.UnixNano(),
+		StartTime:   startTime.Unix() * int64(time.Microsecond),
 	}
 
 	b, err := json.Marshal(&launch)
@@ -221,7 +221,7 @@ func (c *Client) StartTestItem(launchId, name, description, itemType, parentId s
 		Name:        name,
 		Description: description,
 		Tags:        tags,
-		StartTime:   startTime.UnixNano(),
+		StartTime:   startTime.Unix() * int64(time.Microsecond),
 		LaunchId:    launchId,
 		Type:        itemType,
 		Parameters:  nil,
@@ -270,7 +270,7 @@ func (c *Client) FinishTestItem(id, status string, endTime time.Time) error {
 		EndTime int64  `json:"end_time"`
 		Status  string `json:"status"`
 	}{
-		EndTime: endTime.UnixNano(),
+		EndTime: endTime.Unix() * int64(time.Microsecond),
 		Status:  status,
 	}
 
@@ -334,7 +334,7 @@ func (c *Client) GetProjectSettings() (ProjectSettings, error) {
 	return v, nil
 }
 
-func (c *Client) Log(id, message, level string, time time.Time) error {
+func (c *Client) Log(id, message, level string, startTime time.Time) error {
 	url := fmt.Sprintf("%s/%s/log", c.Endpoint, c.Project)
 	data := struct {
 		ItemId  string `json:"item_id"`
@@ -343,7 +343,7 @@ func (c *Client) Log(id, message, level string, time time.Time) error {
 		Level   string `json:"level"`
 	}{
 		ItemId:  id,
-		Time:    time.UnixNano(),
+		Time:    startTime.Unix() * int64(time.Microsecond),
 		Message: message,
 		Level:   level,
 	}
@@ -387,7 +387,7 @@ func (c *Client) finalizeLaunch(id, action, status string, endTime time.Time) er
 		EndTime int64  `json:"end_time"`
 	}{
 		Status:  status,
-		EndTime: endTime.UnixNano(),
+		EndTime: endTime.Unix() * int64(time.Microsecond),
 	}
 
 	b, err := json.Marshal(&data)
