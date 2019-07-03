@@ -25,6 +25,13 @@ const (
 
 	ActionStop   = "stop"
 	ActionFinish = "finish"
+
+	LevelError = "error"
+	LevelTrace = "trace"
+	LevelDebug = "debug"
+	LevelInfo  = "info"
+	LevelWarn  = "warn"
+	LevelEmpty = ""
 )
 
 // Client defines a report portal client
@@ -325,6 +332,51 @@ func (c *Client) GetProjectSettings() (ProjectSettings, error) {
 		return ProjectSettings{}, errors.Wrapf(err, "failed to decode response from %s", url)
 	}
 	return v, nil
+}
+
+func (c *Client) Log(id, message, level string, time time.Time) error {
+	url := fmt.Sprintf("%s/%s/log", c.Endpoint, c.Project)
+	data := struct {
+		ItemId  string `json:"item_id"`
+		Time    int64  `json:"time"`
+		Message string `json:"message"`
+		Level   string `json:"level"`
+	}{
+		ItemId:  id,
+		Time:    time.UnixNano(),
+		Message: message,
+		Level:   level,
+	}
+
+	b, err := json.Marshal(&data)
+	if err != nil {
+		return errors.Wrapf(err, "failed to marshal object, %v", data)
+	}
+
+	r := bytes.NewReader(b)
+	req, err := http.NewRequest(http.MethodPost, url, r)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create POST request to %s", url)
+	}
+
+	auth := fmt.Sprintf("Bearer %s", c.Token)
+	req.Header.Set("Authorization", auth)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := http.Client{}
+	resp, err := client.Do(req)
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Println("[WARN] failed to close response body")
+		}
+	}()
+	if err != nil {
+		return errors.Wrapf(err, "failed to execute POST request %s", req.URL)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return errors.Errorf("failed with status ", resp.Status)
+	}
+	return nil
 }
 
 // finalizeLaunch finalizes exact match with specific action
