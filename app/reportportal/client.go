@@ -41,9 +41,17 @@ type LaunchInfo struct {
 	Number int64  `json:"number"`
 }
 
+// TestItemInfo defines test information
 type TestItemInfo struct {
 	Id       string `json:"id"`
 	UniqueId string `json:"uniqueId"`
+}
+
+// ProjectSettings defines project settings
+type ProjectSettings struct {
+	StatisticsStrategy string                 `json:"statisticsStrategy"`
+	Name               string                 `json:"project"`
+	SubTypes           map[string]interface{} `json:"subTypes"`
 }
 
 // NewClient defines function constructor for client
@@ -288,6 +296,35 @@ func (c *Client) FinishTestItem(id, status string, endTime time.Time) error {
 		return errors.Errorf("failed with status %s", resp.Status)
 	}
 	return nil
+}
+
+func (c *Client) GetProjectSettings() (ProjectSettings, error) {
+	url := fmt.Sprintf("%s/%s/settings", c.Endpoint, c.Project)
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return ProjectSettings{}, errors.Wrapf(err, "failed to create GET request to %s", url)
+	}
+
+	auth := fmt.Sprintf("Bearer %s", c.Token)
+	req.Header.Set("Authorization", auth)
+
+	client := http.Client{}
+	resp, err := client.Do(req)
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Println("[WARN] failed to close body from response")
+		}
+	}()
+	if err != nil {
+		return ProjectSettings{}, errors.Wrapf(err, "failed to GET to %s", url)
+	}
+
+	v := ProjectSettings{}
+	if err := json.NewDecoder(resp.Body).Decode(&v); err != nil {
+		return ProjectSettings{}, errors.Wrapf(err, "failed to decode response from %s", url)
+	}
+	return v, nil
 }
 
 // finalizeLaunch finalizes exact match with specific action
