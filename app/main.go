@@ -57,5 +57,13 @@ func main() {
 	if err := c.StopLaunch(id, "", time.Now()); err != nil {
 		panic(err)
 	}
-	fmt.Println("Launch Stopped")
+	fmt.Println("Launch Stopped. Getting project settings...")
+	time.Sleep(2 * time.Second)
+
+	s, err := c.GetProjectSettings()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(s)
+	fmt.Println("Project settings received. Closing...")
 }
