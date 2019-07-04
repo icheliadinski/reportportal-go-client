@@ -334,6 +334,7 @@ func (c *Client) GetProjectSettings() (ProjectSettings, error) {
 	return v, nil
 }
 
+// Log sends a log to report portal server
 func (c *Client) Log(id, message, level string, startTime time.Time) error {
 	url := fmt.Sprintf("%s/%s/log", c.Endpoint, c.Project)
 	data := struct {
@@ -377,6 +378,11 @@ func (c *Client) Log(id, message, level string, startTime time.Time) error {
 		return errors.Errorf("failed with status %s", resp.Status)
 	}
 	return nil
+}
+
+// LogWithFile sends log with file as attachment
+func (c *Client) LogWithFile(id, message, level, file string, startTime time.Time) error {
+
 }
 
 // finalizeLaunch finalizes exact match with specific action
