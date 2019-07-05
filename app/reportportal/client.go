@@ -4,8 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -381,8 +385,50 @@ func (c *Client) Log(id, message, level string, startTime time.Time) error {
 }
 
 // LogWithFile sends log with file as attachment
-func (c *Client) LogWithFile(id, message, level, file string, startTime time.Time) error {
+func (c *Client) LogWithFile(id, message, level, filePath string, startTime time.Time) error {
+	url := fmt.Sprintf("%s/%s/log", c.Endpoint, c.Project)
+	file, err := os.Open(filePath)
+	if err != nil {
+		return errors.Wrapf(err, "failed to open file %s", filePath)
+	}
+	defer file.Close()
 
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("file", filepath.Base(filePath))
+	if err != nil {
+		return errors.Wrapf(err, "failed to create for file for %s", filePath)
+	}
+
+	_, err = io.Copy(part, file)
+	err = writer.Close()
+	if err != nil {
+		return errors.Wrapf(err, "failed to do copy/close for file %s", filePath)
+	}
+
+	req, err := http.NewRequest(http.MethodPost, url, body)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create POST request %s", url)
+	}
+
+	auth := fmt.Sprintf("Bearer %s", c.Token)
+	req.Header.Set("Authorization", auth)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	client := http.Client{}
+	resp, err := client.Do(req)
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Println("[WARN] failed to close body response")
+		}
+	}()
+	if err != nil {
+		return errors.Wrapf(err, "failed to execute POST request %s", req.URL)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return errors.Errorf("failed with status %s", resp.Status)
+	}
+	return nil
 }
 
 // finalizeLaunch finalizes exact match with specific action
