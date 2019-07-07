@@ -54,7 +54,7 @@ func main() {
 	fmt.Println("Log sent. Adding file...")
 	time.Sleep(2 * time.Second)
 
-	if err := c.LogWithFile(subItem, "my", reportportal.LevelError, "C:\\Users\\Igor_Cheliadinski\\Downloads\\img.jpg", time.Now()); err != nil {
+	if err := c.LogWithFile(subItem, "my", reportportal.LevelError, time.Now()); err != nil {
 		panic(err)
 	}
 	fmt.Println("File sent. Failing subitem...")

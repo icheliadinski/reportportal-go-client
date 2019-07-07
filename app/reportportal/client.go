@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
+	"net/textproto"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -56,6 +57,11 @@ type LaunchInfo struct {
 type TestItemInfo struct {
 	Id       string `json:"id"`
 	UniqueId string `json:"uniqueId"`
+}
+
+type LogFile struct {
+	File            bytes.Buffer `json:"file"`
+	JsonRequestPart bytes.Buffer `json:"json_request_part"`
 }
 
 // ProjectSettings defines project settings
@@ -385,25 +391,74 @@ func (c *Client) Log(id, message, level string, startTime time.Time) error {
 }
 
 // LogWithFile sends log with file as attachment
-func (c *Client) LogWithFile(id, message, level, filePath string, startTime time.Time) error {
+func (c *Client) LogWithFile(id, message, level string, startTime time.Time) error {
 	url := fmt.Sprintf("%s/%s/log", c.Endpoint, c.Project)
-	file, err := os.Open(filePath)
-	if err != nil {
-		return errors.Wrapf(err, "failed to open file %s", filePath)
-	}
-	defer file.Close()
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile("file", filepath.Base(filePath))
+
+	attachFile, err := os.Open("C:\\Users\\Igor_Cheliadinski\\Downloads\\img.jpg")
 	if err != nil {
-		return errors.Wrapf(err, "failed to create for file for %s", filePath)
+		return errors.Wrap(err, "failed to open file img.png")
+	}
+	defer attachFile.Close()
+
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", "img.jpg"))
+	h.Set("Content-Type", "image/jpeg")
+	filePart, err := writer.CreatePart(h)
+	if err != nil {
+		return errors.Wrap(err, "failed to create form file img.png")
 	}
 
-	_, err = io.Copy(part, file)
-	err = writer.Close()
+	jsonReqFile, err := os.Create("json_request_part.json")
 	if err != nil {
-		return errors.Wrapf(err, "failed to do copy/close for file %s", filePath)
+		return errors.Wrap(err, "failed to create filename json_request_part.json")
+	}
+	defer jsonReqFile.Close()
+
+	name := struct {
+		Name string `json:"name"`
+	}{"img.jpg"}
+	jsonReqData := struct {
+		File struct {
+			Name string `json:"name"`
+		} `json:"file"`
+		ItemId   string `json:"item_id"`
+		LogLevel string `json:"level"`
+		Message  string `json:"message"`
+		Time     int64  `json:"time"`
+	}{
+		File:     name,
+		ItemId:   id,
+		LogLevel: level,
+		Message:  message,
+		Time:     startTime.Unix() * int64(time.Microsecond),
+	}
+
+	b, err := json.Marshal(&jsonReqData)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal json req data")
+	}
+
+	_, err = jsonReqFile.Write(b)
+	if err != nil {
+		return errors.Wrap(err, "failed to write to json_request_part.json")
+	}
+
+	h = make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "json_request_part", "json_request_part.json"))
+	h.Set("Content-Type", "application/json")
+	jsonReqPart, err := writer.CreatePart(h)
+	if err != nil {
+		return errors.Wrap(err, "failed to create form file for json_request_part.json")
+	}
+
+	_, err = io.Copy(filePart, attachFile)
+	_, err = io.Copy(jsonReqPart, jsonReqFile)
+	defer writer.Close()
+	if err != nil {
+		return errors.Wrap(err, "failed to copy file content to body")
 	}
 
 	req, err := http.NewRequest(http.MethodPost, url, body)
@@ -415,17 +470,21 @@ func (c *Client) LogWithFile(id, message, level, filePath string, startTime time
 	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
+	bbb, _ := ioutil.ReadAll(req.Body)
+	log.Println(string(bbb))
 	client := http.Client{}
 	resp, err := client.Do(req)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Println("[WARN] failed to close body response")
+			log.Println("[WARN] failed to close response body")
 		}
 	}()
 	if err != nil {
 		return errors.Wrapf(err, "failed to execute POST request %s", req.URL)
 	}
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusCreated {
+		bb, _ := ioutil.ReadAll(resp.Body)
+		log.Println(string(bb))
 		return errors.Errorf("failed with status %s", resp.Status)
 	}
 	return nil
