@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/textproto"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -69,6 +70,12 @@ type ProjectSettings struct {
 	StatisticsStrategy string                 `json:"statisticsStrategy"`
 	Name               string                 `json:"project"`
 	SubTypes           map[string]interface{} `json:"subTypes"`
+}
+
+type Attachment struct {
+	Name    string
+	Type    string
+	Content []byte
 }
 
 // NewClient defines function constructor for client
@@ -391,87 +398,63 @@ func (c *Client) Log(id, message, level string, startTime time.Time) error {
 }
 
 // LogWithFile sends log with file as attachment
-func (c *Client) LogWithFile(id, message, level string, startTime time.Time) error {
+func (c *Client) LogWithFile(id, message, level, filename string, startTime time.Time) error {
 	url := fmt.Sprintf("%s/%s/log", c.Endpoint, c.Project)
+	bodyBuf := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuf)
 
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-
-	attachFile, err := os.Open("C:\\Users\\Igor_Cheliadinski\\Downloads\\img.jpg")
-	if err != nil {
-		return errors.Wrap(err, "failed to open file img.png")
-	}
-	defer attachFile.Close()
-
+	// file
 	h := make(textproto.MIMEHeader)
-	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", "img.jpg"))
-	h.Set("Content-Type", "image/jpeg")
-	filePart, err := writer.CreatePart(h)
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", filepath.Base(filename)))
+	h.Set("Content-Type", "text/plain")
+	fileWriter, err := bodyWriter.CreatePart(h)
+	// fileWriter, err := bodyWriter.CreateFormFile("file", filename)
 	if err != nil {
-		return errors.Wrap(err, "failed to create form file img.png")
+		return errors.Wrap(err, "failed to create form file")
 	}
 
-	jsonReqFile, err := os.Create("json_request_part.json")
+	fh, err := os.Open(filename)
 	if err != nil {
-		return errors.Wrap(err, "failed to create filename json_request_part.json")
+		return errors.Wrap(err, "failed to open file")
 	}
-	defer jsonReqFile.Close()
+	defer fh.Close()
 
-	name := struct {
-		Name string `json:"name"`
-	}{"img.jpg"}
-	jsonReqData := struct {
-		File struct {
-			Name string `json:"name"`
-		} `json:"file"`
-		ItemId   string `json:"item_id"`
-		LogLevel string `json:"level"`
-		Message  string `json:"message"`
-		Time     int64  `json:"time"`
-	}{
-		File:     name,
-		ItemId:   id,
-		LogLevel: level,
-		Message:  message,
-		Time:     startTime.Unix() * int64(time.Microsecond),
-	}
-
-	b, err := json.Marshal(&jsonReqData)
+	_, err = io.Copy(fileWriter, fh)
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal json req data")
+		return errors.Wrap(err, "failed to copy file writer")
 	}
 
-	_, err = jsonReqFile.Write(b)
-	if err != nil {
-		return errors.Wrap(err, "failed to write to json_request_part.json")
-	}
-
+	// json request part
 	h = make(textproto.MIMEHeader)
-	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "json_request_part", "json_request_part.json"))
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"`, "json_request_part"))
 	h.Set("Content-Type", "application/json")
-	jsonReqPart, err := writer.CreatePart(h)
+	reqWriter, err := bodyWriter.CreatePart(h)
 	if err != nil {
-		return errors.Wrap(err, "failed to create form file for json_request_part.json")
+		return errors.Wrap(err, "failed to create form file")
 	}
 
-	_, err = io.Copy(filePart, attachFile)
-	_, err = io.Copy(jsonReqPart, jsonReqFile)
-	defer writer.Close()
+	s := fmt.Sprintf(`[{"file":{"name": "%s"}, "itemId": "%s", "level":"%s", "message": "%s", "time": "%s"}]`, filepath.Base(filename), id, level, message, "2019-07-08T02:04:57.105Z")
+	reqReader := strings.NewReader(s)
+
+	_, err = io.Copy(reqWriter, reqReader)
 	if err != nil {
-		return errors.Wrap(err, "failed to copy file content to body")
+		return errors.Wrap(err, "failed to copy reader")
 	}
 
-	req, err := http.NewRequest(http.MethodPost, url, body)
+	bodyWriter.Close()
+
+	req, err := http.NewRequest(http.MethodPost, url, bodyBuf)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create POST request %s", url)
+		return errors.Wrapf(err, "failed to create POST request to %s", url)
 	}
 
 	auth := fmt.Sprintf("Bearer %s", c.Token)
 	req.Header.Set("Authorization", auth)
-	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
 
-	bbb, _ := ioutil.ReadAll(req.Body)
-	log.Println(string(bbb))
+	bb, _ := ioutil.ReadAll(req.Body)
+	log.Println(string(bb))
+
 	client := http.Client{}
 	resp, err := client.Do(req)
 	defer func() {

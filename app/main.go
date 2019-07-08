@@ -54,7 +54,18 @@ func main() {
 	fmt.Println("Log sent. Adding file...")
 	time.Sleep(2 * time.Second)
 
-	if err := c.LogWithFile(subItem, "my", reportportal.LevelError, time.Now()); err != nil {
+	// f, err := os.Open("C:\\Users\\Igor_Cheliadinski\\Downloads\\img.jpg")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer f.Close()
+	// a := &reportportal.Attachment{
+	// 	Name: "img.jpg",
+	// 	Type: "image/jpeg",
+	// 	Content: ioutil.ReadFile(f)
+	// }
+	// c.LogWithFile(subItem, "my", reportportal.LevelError, a, time.Now())
+	if err := c.LogWithFile(subItem, "my", reportportal.LevelError, "C:\\Users\\Igor_Cheliadinski\\Downloads\\test.txt", time.Now()); err != nil {
 		panic(err)
 	}
 	fmt.Println("File sent. Failing subitem...")
