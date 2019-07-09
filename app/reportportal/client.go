@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -451,9 +450,6 @@ func (c *Client) LogWithFile(id, message, level, filename string, startTime time
 	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
 
-	bb, _ := ioutil.ReadAll(req.Body)
-	log.Println(string(bb))
-
 	client := http.Client{}
 	resp, err := client.Do(req)
 	defer func() {
@@ -465,8 +461,6 @@ func (c *Client) LogWithFile(id, message, level, filename string, startTime time
 		return errors.Wrapf(err, "failed to execute POST request %s", req.URL)
 	}
 	if resp.StatusCode != http.StatusCreated {
-		bb, _ := ioutil.ReadAll(resp.Body)
-		log.Println(string(bb))
 		return errors.Errorf("failed with status %s", resp.Status)
 	}
 	return nil
