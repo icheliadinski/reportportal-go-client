@@ -403,12 +403,28 @@ func (c *Client) LogWithFile(id, message, level, filename string, startTime time
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
-	// file
+	// json request part
 	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"`, "json_request_part"))
+	h.Set("Content-Type", "application/json")
+	reqWriter, err := bodyWriter.CreatePart(h)
+	if err != nil {
+		return errors.Wrap(err, "failed to create form file")
+	}
+
+	s := fmt.Sprintf(`[{"file":{"name": "%s"}, "item_id": "%s", "level":"%s", "message": "%s", "time": %d}]`, filepath.Base(filename), id, level, message, startTime.Unix()*int64(time.Microsecond))
+	reqReader := strings.NewReader(s)
+
+	_, err = io.Copy(reqWriter, reqReader)
+	if err != nil {
+		return errors.Wrap(err, "failed to copy reader")
+	}
+
+	// file
+	h = make(textproto.MIMEHeader)
 	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", filepath.Base(filename)))
 	h.Set("Content-Type", "text/plain")
 	fileWriter, err := bodyWriter.CreatePart(h)
-	// fileWriter, err := bodyWriter.CreateFormFile("file", filename)
 	if err != nil {
 		return errors.Wrap(err, "failed to create form file")
 	}
@@ -422,23 +438,6 @@ func (c *Client) LogWithFile(id, message, level, filename string, startTime time
 	_, err = io.Copy(fileWriter, fh)
 	if err != nil {
 		return errors.Wrap(err, "failed to copy file writer")
-	}
-
-	// json request part
-	h = make(textproto.MIMEHeader)
-	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"`, "json_request_part"))
-	h.Set("Content-Type", "application/json")
-	reqWriter, err := bodyWriter.CreatePart(h)
-	if err != nil {
-		return errors.Wrap(err, "failed to create form file")
-	}
-
-	s := fmt.Sprintf(`[{"file":{"name": "%s"}, "itemId": "%s", "level":"%s", "message": "%s", "time": "%s"}]`, filepath.Base(filename), id, level, message, "2019-07-08T02:04:57.105Z")
-	reqReader := strings.NewReader(s)
-
-	_, err = io.Copy(reqWriter, reqReader)
-	if err != nil {
-		return errors.Wrap(err, "failed to copy reader")
 	}
 
 	bodyWriter.Close()

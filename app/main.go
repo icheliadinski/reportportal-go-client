@@ -65,7 +65,7 @@ func main() {
 	// 	Content: ioutil.ReadFile(f)
 	// }
 	// c.LogWithFile(subItem, "my", reportportal.LevelError, a, time.Now())
-	if err := c.LogWithFile(subItem, "my", reportportal.LevelError, "C:\\Users\\Igor_Cheliadinski\\Downloads\\test.txt", time.Now()); err != nil {
+	if err := c.LogWithFile(subItem, "my", "INFO", "C:\\Users\\Igor_Cheliadinski\\Downloads\\test.txt", time.Now()); err != nil {
 		panic(err)
 	}
 	fmt.Println("File sent. Failing subitem...")
