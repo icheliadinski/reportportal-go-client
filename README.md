@@ -1,2 +1,2 @@
-# reportportal-go-client
+# ReportPortal Go Client
 Go client for ReportPortal http://reportportal.io/
