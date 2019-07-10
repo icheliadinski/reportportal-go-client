@@ -1,4 +1,4 @@
-package reportportal
+package rp
 
 // Launch defines launch info
 type Launch struct {
