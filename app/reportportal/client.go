@@ -422,7 +422,7 @@ func (c *Client) LogWithFile(id, message, level, filename string, startTime time
 	// file
 	h = make(textproto.MIMEHeader)
 	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", filepath.Base(filename)))
-	h.Set("Content-Type", "text/plain")
+	h.Set("Content-Type", "img/jpeg")
 	fileWriter, err := bodyWriter.CreatePart(h)
 	if err != nil {
 		return errors.Wrap(err, "failed to create form file")
