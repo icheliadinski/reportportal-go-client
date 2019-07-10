@@ -10,25 +10,25 @@ import (
 )
 
 func main() {
-	var opts reportportal.Client
+	var opts rp.Client
 	if _, err := flags.Parse(&opts); err != nil {
 		os.Exit(1)
 	}
-	c := reportportal.NewClient(opts.Endpoint, opts.Token, opts.Launch, opts.Project)
+	c := rp.NewClient(opts.Endpoint, opts.Token, opts.Launch, opts.Project)
 	if err := c.CheckConnect(); err != nil {
 		panic(err)
 	}
 	fmt.Println("Connection checked. Trying to start a launch...")
 	time.Sleep(2 * time.Second)
 
-	id, err := c.StartLaunch("Go Launch", "Test go launch", reportportal.ModeDefault, []string{}, time.Now())
+	id, err := c.StartLaunch("Go Launch", "Test go launch", rp.ModeDefault, []string{}, time.Now())
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("Launch Started. Updating...")
 	time.Sleep(2 * time.Second)
 
-	if err := c.UpdateLaunch(id, "updated descr", reportportal.ModeDebug, []string{"tag1", "tag2"}); err != nil {
+	if err := c.UpdateLaunch(id, "updated descr", rp.ModeDebug, []string{"tag1", "tag2"}); err != nil {
 		panic(err)
 	}
 	fmt.Println("Launch updated. Adding item...")
@@ -48,7 +48,7 @@ func main() {
 	fmt.Println("Subitem started. Writing to test item...")
 	time.Sleep(2 * time.Second)
 
-	if err := c.Log(subItem, "my super failed message", reportportal.LevelError, time.Now()); err != nil {
+	if err := c.Log(subItem, "my super failed message", rp.LevelError, time.Now()); err != nil {
 		panic(err)
 	}
 	fmt.Println("Log sent. Adding file...")
@@ -65,13 +65,13 @@ func main() {
 	// 	Content: ioutil.ReadFile(f)
 	// }
 	// c.LogWithFile(subItem, "my", reportportal.LevelError, a, time.Now())
-	if err := c.LogWithFile(subItem, "my", "INFO", "C:\\Users\\Igor_Cheliadinski\\Downloads\\test.txt", time.Now()); err != nil {
+	if err := c.LogWithFile(subItem, "my", "INFO", "C:\\Users\\Igor_Cheliadinski\\Downloads\\img.JPEG", time.Now()); err != nil {
 		panic(err)
 	}
 	fmt.Println("File sent. Failing subitem...")
 	time.Sleep(2 * time.Second)
 
-	if err := c.FinishTestItem(subItem, reportportal.StatusFailed, time.Now()); err != nil {
+	if err := c.FinishTestItem(subItem, rp.StatusFailed, time.Now()); err != nil {
 		panic(err)
 	}
 	fmt.Println("Subitem failed. Stopping launch...")
