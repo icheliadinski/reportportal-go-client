@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	rp "github.com/icheliadinski/reportportal-go-client/app/reportportal"
+	"github.com/icheliadinski/reportportal-go-client/app/rp"
 	"github.com/jessevdk/go-flags"
 )
 
