@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/icheliadinski/reportportal-go-client/app/rp"
@@ -12,47 +11,54 @@ import (
 func main() {
 	var opts rp.Client
 	if _, err := flags.Parse(&opts); err != nil {
-		os.Exit(1)
-	}
-	c := rp.NewClient(opts.Endpoint, opts.Token, opts.Launch, opts.Project)
-	if err := c.CheckConnect(); err != nil {
 		panic(err)
 	}
-	fmt.Println("Connection checked. Trying to start a launch...")
-	time.Sleep(2 * time.Second)
 
-	id, err := c.StartLaunch("Go Launch", "Test go launch", rp.ModeDefault, []string{}, time.Now())
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Launch Started. Updating...")
-	time.Sleep(2 * time.Second)
+	c := rp.NewClient(opts.Endpoint, opts.Project, opts.Token)
+	c.NewLaunch("Go Launch")
+	// var opts rp.Client
+	// if _, err := flags.Parse(&opts); err != nil {
+	// 	os.Exit(1)
+	// }
+	// c := rp.NewClient(opts.Endpoint, opts.Token, opts.Launch, opts.Project)
+	// if err := c.CheckConnect(); err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println("Connection checked. Trying to start a launch...")
+	// time.Sleep(2 * time.Second)
 
-	if err := c.UpdateLaunch(id, "updated descr", rp.ModeDebug, []string{"tag1", "tag2"}); err != nil {
-		panic(err)
-	}
-	fmt.Println("Launch updated. Adding item...")
-	time.Sleep(2 * time.Second)
+	// id, err := c.StartLaunch("Go Launch", "Test go launch", rp.ModeDefault, []string{}, time.Now())
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println("Launch Started. Updating...")
+	// time.Sleep(2 * time.Second)
 
-	suiteId, err := c.StartTestItem(id, "Item", "Item descr", "SUITE", "", []string{"suite"}, time.Now())
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Item started. Creating subitem...")
-	time.Sleep(2 * time.Second)
+	// if err := c.UpdateLaunch(id, "updated descr", rp.ModeDebug, []string{"tag1", "tag2"}); err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println("Launch updated. Adding item...")
+	// time.Sleep(2 * time.Second)
 
-	subItem, err := c.StartTestItem(id, "Sub Item", "Sub item descr", "TEST", suiteId, []string{"sub"}, time.Now())
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Subitem started. Writing to test item...")
-	time.Sleep(2 * time.Second)
+	// suiteId, err := c.StartTestItem(id, "Item", "Item descr", "SUITE", "", []string{"suite"}, time.Now())
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println("Item started. Creating subitem...")
+	// time.Sleep(2 * time.Second)
 
-	if err := c.Log(subItem, "my super failed message", rp.LevelError, time.Now()); err != nil {
-		panic(err)
-	}
-	fmt.Println("Log sent. Adding file...")
-	time.Sleep(2 * time.Second)
+	// subItem, err := c.StartTestItem(id, "Sub Item", "Sub item descr", "TEST", suiteId, []string{"sub"}, time.Now())
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println("Subitem started. Writing to test item...")
+	// time.Sleep(2 * time.Second)
+
+	// if err := c.Log(subItem, "my super failed message", rp.LevelError, time.Now()); err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println("Log sent. Adding file...")
+	// time.Sleep(2 * time.Second)
 
 	// f, err := os.Open("C:\\Users\\Igor_Cheliadinski\\Downloads\\img.jpg")
 	// if err != nil {
