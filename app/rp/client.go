@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -18,32 +17,47 @@ const (
 	StatusStopped  = "STOPPED"
 	StatusSkipped  = "SKIPPED"
 	StatusReseted  = "RESETED"
-	StatusCanceled = "CANCELED"
+	StatusCanceled = "CANCELLED"
 
 	ActionStop   = "stop"
 	ActionFinish = "finish"
 
-	LevelError = "error"
-	LevelTrace = "trace"
-	LevelDebug = "debug"
-	LevelInfo  = "info"
-	LevelWarn  = "warn"
-	LevelEmpty = ""
+	LevelError   = "error"
+	LevelWarn    = "warn"
+	LevelTrace   = "trace"
+	LevelInfo    = "info"
+	LevelDebug   = "debug"
+	LevelFatal   = "fatal"
+	LevelUnknown = "unknown"
+
+	TestItemSuite        = "SUITE"
+	TestItemStory        = "STORY"
+	TestItemTest         = "TEST"
+	TestItemScenario     = "SCENARIO"
+	TestItemStep         = "STEP"
+	TestItemBeforeClass  = "BEFORE_CLASS"
+	TestItemBeforeGroups = "BEFORE_GROUPS"
+	TestItemBeforeMethod = "BEFORE_METHOD"
+	TestItemBeforeSuite  = "BEFORE_SUITE"
+	TestItemBeforeTest   = "BEFORE_TEST"
+	TestItemAfterClass   = "AFTER_CLASS"
+	TestItemAfterGroups  = "AFTER_GROUPS"
+	TestItemAfterMethod  = "AFTER_METHOD"
+	TestItemAfterSuite   = "AFTER_SUITE"
+	TestItemAfterTest    = "AFTER_TEST"
 )
 
 // Client defines a report portal client
 type Client struct {
 	Endpoint string `short:"e" long:"endpoint" env:"ENDPOINT" description:"report portal endpoint"`
 	Token    string `short:"t" long:"token" env:"TOKEN" description:"user token for report portal"`
-	Launch   string `short:"l" long:"launch" env:"LAUNCH" description:"launch name"`
 	Project  string `short:"p" long:"project" env:"PROJECT" description:"project name"`
 }
 
 // NewClient creates new client for ReportPortal endpoint
 func NewClient(endpoint, project, token string) *Client {
-	e := strings.TrimSuffix(endpoint, "/")
 	return &Client{
-		Endpoint: e,
+		Endpoint: endpoint,
 		Project:  project,
 		Token:    token,
 	}
@@ -54,15 +68,17 @@ func (c *Client) CheckConnect() error {
 	url := fmt.Sprintf("%s/user", c.Endpoint)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return errors.Wrapf(err, "can't create GET request to %s", url)
+		return errors.Wrapf(err, "can't create a new request for %s", url)
 	}
 
-	addContentTypeJSON()
+	auth := fmt.Sprintf("Bearer %s", c.Token)
+	req.Header.Set("Authorization", auth)
 
-	resp, err := doRequest(req, c.Token)
+	client := http.Client{}
+	resp, err := client.Do(req)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Printf("[WARN] failed to close body for response to %s", req.URL)
+			log.Println("[WARN] failed to close body for response")
 		}
 	}()
 
@@ -70,19 +86,9 @@ func (c *Client) CheckConnect() error {
 		return errors.Wrapf(err, "failed to execute GET request %s", req.URL)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errors.Errorf("GET request to %s failed with status %s", req.URL, resp.Status)
+		return errors.Errorf("failed with status %s", resp.Status)
 	}
 	return nil
-}
-
-func (c *Client) NewLaunch(name, description, mode string, tags []string) *Launch {
-	return &Launch{
-		Name:        name,
-		Description: description,
-		Mode:        mode,
-		Tags:        tags,
-		client:      c,
-	}
 }
 
 // LaunchInfo defines launch object
