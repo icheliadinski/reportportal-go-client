@@ -159,3 +159,43 @@ func (ti *TestItem) Finish(status string) error {
 	}
 	return nil
 }
+
+func (ti *TestItem) Log(message, level string) error {
+	url := fmt.Sprintf("%s/%s/log", ti.launch.client.Endpoint, ti.launch.client.Project)
+	data := struct {
+		ItemId  string `json:"item_id"`
+		Message string `json:"message"`
+		Level   string `json:"level"`
+		Time    int64  `json:"time"`
+	}{ti.Id, message, level, toTimestamp(time.Now())}
+
+	b, err := json.Marshal(&data)
+	if err != nil {
+		return errors.Wrapf(err, "failed to marshal object, %v", data)
+	}
+
+	r := bytes.NewReader(b)
+	req, err := http.NewRequest(http.MethodPost, url, r)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create POST request to %s", url)
+	}
+
+	auth := fmt.Sprintf("Bearer %s", ti.launch.client.Token)
+	req.Header.Set("Authorization", auth)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := http.Client{}
+	resp, err := client.Do(req)
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Println("[WARN] failed to close response body")
+		}
+	}()
+	if err != nil {
+		return errors.Wrapf(err, "failed to execute POST request %s", req.URL)
+	}
+	if resp.StatusCode != http.StatusCreated {
+		return errors.Errorf("failed with status %s", resp.Status)
+	}
+	return nil
+}
