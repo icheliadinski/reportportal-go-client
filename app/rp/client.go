@@ -122,52 +122,6 @@ func (c *Client) CheckConnect() error {
 // 	return v, nil
 // }
 
-// // Log sends a log to report portal server
-// func (c *Client) Log(id, message, level string, startTime time.Time) error {
-// 	url := fmt.Sprintf("%s/%s/log", c.Endpoint, c.Project)
-// 	data := struct {
-// 		ItemId  string `json:"item_id"`
-// 		Time    int64  `json:"time"`
-// 		Message string `json:"message"`
-// 		Level   string `json:"level"`
-// 	}{
-// 		ItemId:  id,
-// 		Time:    startTime.Unix() * int64(time.Microsecond),
-// 		Message: message,
-// 		Level:   level,
-// 	}
-
-// 	b, err := json.Marshal(&data)
-// 	if err != nil {
-// 		return errors.Wrapf(err, "failed to marshal object, %v", data)
-// 	}
-
-// 	r := bytes.NewReader(b)
-// 	req, err := http.NewRequest(http.MethodPost, url, r)
-// 	if err != nil {
-// 		return errors.Wrapf(err, "failed to create POST request to %s", url)
-// 	}
-
-// 	auth := fmt.Sprintf("Bearer %s", c.Token)
-// 	req.Header.Set("Authorization", auth)
-// 	req.Header.Set("Content-Type", "application/json")
-
-// 	client := http.Client{}
-// 	resp, err := client.Do(req)
-// 	defer func() {
-// 		if err := resp.Body.Close(); err != nil {
-// 			log.Println("[WARN] failed to close response body")
-// 		}
-// 	}()
-// 	if err != nil {
-// 		return errors.Wrapf(err, "failed to execute POST request %s", req.URL)
-// 	}
-// 	if resp.StatusCode != http.StatusCreated {
-// 		return errors.Errorf("failed with status %s", resp.Status)
-// 	}
-// 	return nil
-// }
-
 // // LogWithFile sends log with file as attachment
 // func (c *Client) LogWithFile(id, message, level, filename string, startTime time.Time) error {
 // 	url := fmt.Sprintf("%s/%s/log", c.Endpoint, c.Project)
@@ -233,48 +187,6 @@ func (c *Client) CheckConnect() error {
 // 		return errors.Wrapf(err, "failed to execute POST request %s", req.URL)
 // 	}
 // 	if resp.StatusCode != http.StatusCreated {
-// 		return errors.Errorf("failed with status %s", resp.Status)
-// 	}
-// 	return nil
-// }
-
-// // finalizeLaunch finalizes exact match with specific action
-// func (c *Client) finalizeLaunch(id, action, status string, endTime time.Time) error {
-// 	url := fmt.Sprintf("%s/%s/launch/%s/%s", c.Endpoint, c.Project, id, action)
-// 	data := struct {
-// 		Status  string `json:"status"`
-// 		EndTime int64  `json:"end_time"`
-// 	}{
-// 		Status:  status,
-// 		EndTime: endTime.Unix() * int64(time.Microsecond),
-// 	}
-
-// 	b, err := json.Marshal(&data)
-// 	if err != nil {
-// 		return errors.Wrapf(err, "failed to marshal object, %v", data)
-// 	}
-
-// 	r := bytes.NewReader(b)
-// 	req, err := http.NewRequest(http.MethodPut, url, r)
-// 	if err != nil {
-// 		return errors.Wrapf(err, "failed to create request to %s", url)
-// 	}
-
-// 	auth := fmt.Sprintf("Bearer %s", c.Token)
-// 	req.Header.Set("Authorization", auth)
-// 	req.Header.Set("Content-Type", "application/json")
-
-// 	client := http.Client{}
-// 	resp, err := client.Do(req)
-// 	defer func() {
-// 		if err := resp.Body.Close(); err != nil {
-// 			log.Println("[WARN] Failed to close response body")
-// 		}
-// 	}()
-// 	if err != nil {
-// 		return errors.Wrapf(err, "failed to execute PUT request %s", req.URL)
-// 	}
-// 	if resp.StatusCode != http.StatusOK {
 // 		return errors.Errorf("failed with status %s", resp.Status)
 // 	}
 // 	return nil
