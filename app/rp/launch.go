@@ -96,6 +96,30 @@ func (l *Launch) Finish(status string) error {
 
 // Delete delete launch
 func (l *Launch) Delete() error {
+	url := fmt.Sprintf("%s/%s/launch/%s", l.client.Endpoint, l.client.Project, l.Id)
+
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create DELETE request for %s", url)
+	}
+
+	auth := fmt.Sprintf("Bearer %s", l.client.Token)
+	req.Header.Set("Authorization", auth)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := http.Client{}
+	resp, err := client.Do(req)
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Println("[WARN] failed to close body response")
+		}
+	}()
+	if err != nil {
+		return errors.Wrapf(err, "failed to execute PUT request %s", req.URL)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return errors.Errorf("failed with status %s", resp.Status)
+	}
 	return nil
 }
 
@@ -116,7 +140,7 @@ func (l *Launch) Update(description, mode string, tags []string) error {
 	r := bytes.NewReader(b)
 	req, err := http.NewRequest(http.MethodPut, url, r)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create request for %s", url)
+		return errors.Wrapf(err, "failed to create PUT request for %s", url)
 	}
 
 	auth := fmt.Sprintf("Bearer %s", l.client.Token)
@@ -154,7 +178,7 @@ func (l *Launch) finalize(status, action string) error {
 	r := bytes.NewReader(b)
 	req, err := http.NewRequest(http.MethodPut, url, r)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create request to %s", url)
+		return errors.Wrapf(err, "failed to create PUT request to %s", url)
 	}
 
 	auth := fmt.Sprintf("Bearer %s", l.client.Token)
