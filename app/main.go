@@ -15,6 +15,8 @@ func main() {
 	c.CheckConnect()
 	l := rp.NewLaunch(c, "Go Launch", "Go launch info", rp.ModeDefault, []string{"tag1", "tag2"})
 	l.Start()
+	l.Stop(rp.StatusFailed)
+	l.Delete()
 	// var opts rp.Client
 	// if _, err := flags.Parse(&opts); err != nil {
 	// 	os.Exit(1)
