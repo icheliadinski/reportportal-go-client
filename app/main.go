@@ -1,9 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"time"
-
 	"github.com/icheliadinski/reportportal-go-client/app/rp"
 	"github.com/jessevdk/go-flags"
 )
@@ -15,7 +12,9 @@ func main() {
 	}
 
 	c := rp.NewClient(opts.Endpoint, opts.Project, opts.Token)
-	c.NewLaunch("Go Launch")
+	c.CheckConnect()
+	l := rp.NewLaunch(c, "Go Launch", "Go launch info", rp.ModeDefault, []string{"tag1", "tag2"})
+	l.Start()
 	// var opts rp.Client
 	// if _, err := flags.Parse(&opts); err != nil {
 	// 	os.Exit(1)
@@ -71,28 +70,28 @@ func main() {
 	// 	Content: ioutil.ReadFile(f)
 	// }
 	// c.LogWithFile(subItem, "my", reportportal.LevelError, a, time.Now())
-	if err := c.LogWithFile(subItem, "my", "INFO", "C:\\Users\\Igor_Cheliadinski\\Downloads\\img.JPEG", time.Now()); err != nil {
-		panic(err)
-	}
-	fmt.Println("File sent. Failing subitem...")
-	time.Sleep(2 * time.Second)
+	// if err := c.LogWithFile(subItem, "my", "INFO", "C:\\Users\\Igor_Cheliadinski\\Downloads\\img.JPEG", time.Now()); err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println("File sent. Failing subitem...")
+	// time.Sleep(2 * time.Second)
 
-	if err := c.FinishTestItem(subItem, rp.StatusFailed, time.Now()); err != nil {
-		panic(err)
-	}
-	fmt.Println("Subitem failed. Stopping launch...")
-	time.Sleep(2 * time.Second)
+	// if err := c.FinishTestItem(subItem, rp.StatusFailed, time.Now()); err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println("Subitem failed. Stopping launch...")
+	// time.Sleep(2 * time.Second)
 
-	if err := c.StopLaunch(id, "", time.Now()); err != nil {
-		panic(err)
-	}
-	fmt.Println("Launch Stopped. Getting project settings...")
-	time.Sleep(2 * time.Second)
+	// if err := c.StopLaunch(id, "", time.Now()); err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println("Launch Stopped. Getting project settings...")
+	// time.Sleep(2 * time.Second)
 
-	s, err := c.GetProjectSettings()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(s)
-	fmt.Println("Project settings received. Closing...")
+	// s, err := c.GetProjectSettings()
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println(s)
+	// fmt.Println("Project settings received. Closing...")
 }
