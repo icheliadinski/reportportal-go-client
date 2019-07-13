@@ -1,8 +1,12 @@
 package main
 
 import (
-	"github.com/icheliadinski/reportportal-go-client/app/rp"
+	"fmt"
+	"time"
+
 	"github.com/jessevdk/go-flags"
+
+	"github.com/icheliadinski/reportportal-go-client/src/rp"
 )
 
 func main() {
@@ -13,10 +17,41 @@ func main() {
 
 	c := rp.NewClient(opts.Endpoint, opts.Project, opts.Token)
 	c.CheckConnect()
+	fmt.Println("Connection checked!")
+
+	fmt.Println("Trying to start a launch...")
+	time.Sleep(2 * time.Second)
 	l := rp.NewLaunch(c, "Go Launch", "Go launch info", rp.ModeDefault, []string{"tag1", "tag2"})
-	l.Start()
-	l.Stop(rp.StatusFailed)
-	l.Delete()
+	if err := l.Start(); err != nil {
+		panic(err)
+	}
+	fmt.Println("Launch started!")
+
+	fmt.Println("Trying to add test suite...")
+	time.Sleep(2 * time.Second)
+	ts := rp.NewTestItem(l, "Suite", "Suite descr", rp.TestItemSuite, []string{"suite"}, nil)
+	if err := ts.Start(); err != nil {
+		panic(err)
+	}
+	fmt.Println("Test suite created!")
+
+	fmt.Println("Trying to add test item...")
+	time.Sleep(2 * time.Second)
+	ti := rp.NewTestItem(l, "Test", "Test descr", rp.TestItemTest, []string{"test"}, ts)
+	if err := ti.Start(); err != nil {
+		panic(err)
+	}
+	fmt.Println("Test item created!")
+
+	fmt.Println("Tryng to stop the launch...")
+	time.Sleep(2 * time.Second)
+	if err := l.Stop(rp.StatusFailed); err != nil {
+		panic(err)
+	}
+	fmt.Println("Launch stopped!")
+
+	// l.Stop(rp.StatusFailed)
+	// l.Delete()
 	// var opts rp.Client
 	// if _, err := flags.Parse(&opts); err != nil {
 	// 	os.Exit(1)

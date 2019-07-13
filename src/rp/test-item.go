@@ -74,7 +74,12 @@ func NewTestItem(launch *Launch, name, description, itemType string, tags []stri
 }
 
 func (ti *TestItem) Start() error {
-	url := fmt.Sprintf("%s/%s/item/%s", ti.launch.client.Endpoint, ti.launch.client.Project, ti.Parent.Id)
+	var url string
+	if ti.Parent != nil {
+		url = fmt.Sprintf("%s/%s/item/%s", ti.launch.client.Endpoint, ti.launch.client.Project, ti.Parent.Id)
+	} else {
+		url = fmt.Sprintf("%s/%s/item", ti.launch.client.Endpoint, ti.launch.client.Project)
+	}
 	data := struct {
 		Name        string   `json:"name"`
 		Description string   `json:"description"`
