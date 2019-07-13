@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -172,11 +174,11 @@ func (ti *TestItem) Finish(status string) error {
 	return nil
 }
 
-func (ti *TestItem) Log(message, level string, attachment *Attachment) error {
+func (ti *TestItem) Log(message, level, filename string) error {
 	var req *http.Request
 	var err error
-	if attachment != nil {
-		req, err = ti.getReqForLogWithAttach(message, level, attachment)
+	if filename != "" {
+		req, err = ti.getReqForLogWithAttach(message, level, filename)
 	} else {
 		req, err = ti.getReqForLog(message, level)
 	}
@@ -200,7 +202,7 @@ func (ti *TestItem) Log(message, level string, attachment *Attachment) error {
 	return nil
 }
 
-func (ti *TestItem) getReqForLogWithAttach(message, level string, attachment *Attachment) (*http.Request, error) {
+func (ti *TestItem) getReqForLogWithAttach(message, level string, filename string) (*http.Request, error) {
 	url := fmt.Sprintf("%s/%s/log", ti.launch.client.Endpoint, ti.launch.client.Project)
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
@@ -214,45 +216,45 @@ func (ti *TestItem) getReqForLogWithAttach(message, level string, attachment *At
 		return nil, errors.Wrap(err, "failed to create form file")
 	}
 
-	s := fmt.Sprintf(`[{"file":{"name": "%s"}, "item_id": "%s", "level":"%s", "message": "%s", "time": %d}]`, filepath.Base(attachment.filename), id, level, message, startTime.Unix()*int64(time.Microsecond))
+	s := fmt.Sprintf(`[{"file":{"name": "%s"}, "item_id": "%s", "level":"%s", "message": "%s", "time": %d}]`, filepath.Base(filename), ti.Id, level, message, toTimestamp(time.Now()))
 	reqReader := strings.NewReader(s)
 
-	// _, err = io.Copy(reqWriter, reqReader)
-	// if err != nil {
-	// 	return errors.Wrap(err, "failed to copy reader")
-	// }
+	_, err = io.Copy(reqWriter, reqReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to copy reader")
+	}
 
-	// // file
-	// h = make(textproto.MIMEHeader)
-	// h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", filepath.Base(filename)))
-	// h.Set("Content-Type", "img/jpeg")
-	// fileWriter, err := bodyWriter.CreatePart(h)
-	// if err != nil {
-	// 	return errors.Wrap(err, "failed to create form file")
-	// }
+	// file
+	h = make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", filepath.Base(filename)))
+	h.Set("Content-Type", "img/jpeg")
+	fileWriter, err := bodyWriter.CreatePart(h)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create form file")
+	}
 
-	// fh, err := os.Open(filename)
-	// if err != nil {
-	// 	return errors.Wrap(err, "failed to open file")
-	// }
-	// defer fh.Close()
+	fh, err := os.Open(filename)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open file")
+	}
+	defer fh.Close()
 
-	// _, err = io.Copy(fileWriter, fh)
-	// if err != nil {
-	// 	return errors.Wrap(err, "failed to copy file writer")
-	// }
+	_, err = io.Copy(fileWriter, fh)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to copy file writer")
+	}
 
-	// bodyWriter.Close()
+	bodyWriter.Close()
 
-	// req, err := http.NewRequest(http.MethodPost, url, bodyBuf)
-	// if err != nil {
-	// 	return errors.Wrapf(err, "failed to create POST request to %s", url)
-	// }
+	req, err := http.NewRequest(http.MethodPost, url, bodyBuf)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create POST request to %s", url)
+	}
 
-	// auth := fmt.Sprintf("Bearer %s", c.Token)
-	// req.Header.Set("Authorization", auth)
-	// req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
-	// return nil, nil
+	auth := fmt.Sprintf("Bearer %s", ti.launch.client.Token)
+	req.Header.Set("Authorization", auth)
+	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
+	return req, nil
 }
 
 func (ti *TestItem) getReqForLog(message, level string) (*http.Request, error) {
