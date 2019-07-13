@@ -12,7 +12,6 @@ import (
 	"net/textproto"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -61,6 +60,19 @@ type Attachment struct {
 	Name    string
 	Type    string
 	Content []byte
+}
+
+type fileInfo struct {
+	Name string `json:"name"`
+}
+
+// jsonRequestPart defines request object for request with attachment
+type jsonRequestPart []struct {
+	File    *fileInfo `json:"file"`
+	ItemId  string    `json:"item_id"`
+	Level   string    `json:"level"`
+	Message string    `json:"message"`
+	Time    int64     `json:"time"`
 }
 
 // NewTestItem creates new test item
@@ -217,8 +229,18 @@ func (ti *TestItem) getReqForLogWithAttach(message, level string, filename strin
 		return nil, errors.Wrap(err, "failed to create form file")
 	}
 
-	s := fmt.Sprintf(`[{"file":{"name": "%s"}, "item_id": "%s", "level":"%s", "message": "%s", "time": %d}]`, filepath.Base(filename), ti.Id, level, message, toTimestamp(time.Now()))
-	reqReader := strings.NewReader(s)
+	jsonReqPart := &jsonRequestPart{{
+		File:    &fileInfo{filepath.Base(filename)},
+		ItemId:  ti.Id,
+		Level:   level,
+		Message: message,
+		Time:    toTimestamp(time.Now()),
+	}}
+	bs, err := json.Marshal(&jsonReqPart)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to marshal to JSON: %v", jsonReqPart)
+	}
+	reqReader := bytes.NewReader(bs)
 
 	_, err = io.Copy(reqWriter, reqReader)
 	if err != nil {
