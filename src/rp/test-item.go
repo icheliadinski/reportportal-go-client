@@ -55,13 +55,7 @@ type TestItem struct {
 	launch *Launch
 }
 
-// Attachment defines file attachment structure
-type Attachment struct {
-	Name    string
-	Type    string
-	Content []byte
-}
-
+// fileInfo defines file structure for json request part
 type fileInfo struct {
 	Name string `json:"name"`
 }
@@ -88,6 +82,7 @@ func NewTestItem(launch *Launch, name, description, itemType string, tags []stri
 	}
 }
 
+// Start starts specified test item
 func (ti *TestItem) Start() error {
 	var url string
 	if ti.Parent != nil {
@@ -153,6 +148,7 @@ func (ti *TestItem) Start() error {
 	return nil
 }
 
+// Finish finishes specified test item
 func (ti *TestItem) Finish(status string) error {
 	url := fmt.Sprintf("%s/%s/item/%s", ti.client.Endpoint, ti.client.Project, ti.Id)
 	data := struct {
@@ -188,11 +184,12 @@ func (ti *TestItem) Finish(status string) error {
 	return nil
 }
 
-func (ti *TestItem) Log(message, level, filename string) error {
+// Log sends log for specified test item
+func (ti *TestItem) Log(message, level, filePath string) error {
 	var req *http.Request
 	var err error
-	if filename != "" {
-		req, err = ti.getReqForLogWithAttach(message, level, filename)
+	if filePath != "" {
+		req, err = ti.getReqForLogWithAttach(message, level, filePath)
 	} else {
 		req, err = ti.getReqForLog(message, level)
 	}
@@ -259,14 +256,22 @@ func (ti *TestItem) getReqForLogWithAttach(message, level string, filePath strin
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open file")
 	}
-	defer fh.Close()
+	defer func() {
+		if err := fh.Close(); err != nil {
+			log.Printf("[WARN] failed to close file %s", filePath)
+		}
+	}()
 
 	_, err = io.Copy(fileWriter, fh)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to copy file writer")
 	}
 
-	bodyWriter.Close()
+	defer func() {
+		if err := bodyWriter.Close(); err != nil {
+			log.Println("[WARN] Failed to close body")
+		}
+	}()
 
 	req, err := http.NewRequest(http.MethodPost, url, bodyBuf)
 	if err != nil {
