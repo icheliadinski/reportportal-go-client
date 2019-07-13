@@ -216,11 +216,11 @@ func (ti *TestItem) Log(message, level, filename string) error {
 }
 
 // getReqForLogWithAttach creates request to perform log request with message and attachment
-func (ti *TestItem) getReqForLogWithAttach(message, level string, filename string) (*http.Request, error) {
+func (ti *TestItem) getReqForLogWithAttach(message, level string, filePath string) (*http.Request, error) {
 	url := fmt.Sprintf("%s/%s/log", ti.client.Endpoint, ti.client.Project)
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
-	fname := filepath.Base(filename)
+	fname := filepath.Base(filePath)
 
 	// json request part
 	h := make(textproto.MIMEHeader)
@@ -248,14 +248,14 @@ func (ti *TestItem) getReqForLogWithAttach(message, level string, filename strin
 
 	// file
 	h = make(textproto.MIMEHeader)
-	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", filepath.Base(filename)))
-	h.Set("Content-Type", mime.TypeByExtension(filepath.Ext(filename)))
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", fname))
+	h.Set("Content-Type", mime.TypeByExtension(fname))
 	fileWriter, err := bodyWriter.CreatePart(h)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create form file")
 	}
 
-	fh, err := os.Open(filename)
+	fh, err := os.Open(filePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open file")
 	}
