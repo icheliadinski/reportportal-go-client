@@ -215,10 +215,12 @@ func (ti *TestItem) Log(message, level, filename string) error {
 	return nil
 }
 
+// getReqForLogWithAttach creates request to perform log request with message and attachment
 func (ti *TestItem) getReqForLogWithAttach(message, level string, filename string) (*http.Request, error) {
 	url := fmt.Sprintf("%s/%s/log", ti.client.Endpoint, ti.client.Project)
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
+	fname := filepath.Base(filename)
 
 	// json request part
 	h := make(textproto.MIMEHeader)
@@ -229,13 +231,10 @@ func (ti *TestItem) getReqForLogWithAttach(message, level string, filename strin
 		return nil, errors.Wrap(err, "failed to create form file")
 	}
 
-	jsonReqPart := &jsonRequestPart{{
-		File:    &fileInfo{filepath.Base(filename)},
-		ItemId:  ti.Id,
-		Level:   level,
-		Message: message,
-		Time:    toTimestamp(time.Now()),
-	}}
+	f := &fileInfo{fname}
+	jsonReqPart := &jsonRequestPart{
+		{f, ti.Id, level, message, toTimestamp(time.Now())},
+	}
 	bs, err := json.Marshal(&jsonReqPart)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to marshal to JSON: %v", jsonReqPart)
@@ -278,6 +277,7 @@ func (ti *TestItem) getReqForLogWithAttach(message, level string, filename strin
 	return req, nil
 }
 
+// getReqForLog creates request to perform log request with message
 func (ti *TestItem) getReqForLog(message, level string) (*http.Request, error) {
 	url := fmt.Sprintf("%s/%s/log", ti.client.Endpoint, ti.client.Project)
 	data := struct {
