@@ -45,7 +45,7 @@ func NewClient(endpoint, project, token string, apiVersion int) *Client {
 	endpoint = strings.TrimSuffix(endpoint, "/")
 
 	var esb strings.Builder
-	if !strings.HasPrefix(endpoint, "https://") {
+	if !strings.HasPrefix(endpoint, "https://") && !strings.HasPrefix(endpoint, "http://") {
 		esb.WriteString("https://")
 	}
 	esb.WriteString(endpoint)
