@@ -52,7 +52,7 @@ func main() {
 
 	fmt.Println("Trying to send log with attach...")
 	time.Sleep(2 * time.Second)
-	if err := ti.Log("super mega message", rp.LevelError, "C:\\Users\\Igor_Cheliadinski\\Downloads\\test.txt"); err != nil {
+	if err := ti.Log("super mega message", rp.LevelError, "C:\\Users\\Igor_Cheliadinski\\Downloads\\cat.jpg"); err != nil {
 		panic(err)
 	}
 	fmt.Println("Log sent!")
