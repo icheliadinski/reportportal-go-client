@@ -232,7 +232,7 @@ func (ti *TestItem) getReqForLogWithAttach(message, level string, filename strin
 	// file
 	h = make(textproto.MIMEHeader)
 	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", filepath.Base(filename)))
-	h.Set("Content-Type", "img/jpeg")
+	h.Set("Content-Type", "text/plain")
 	fileWriter, err := bodyWriter.CreatePart(h)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create form file")
