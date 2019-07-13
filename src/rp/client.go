@@ -55,10 +55,7 @@ func (c *Client) CheckConnect() error {
 		return errors.Wrapf(err, "can't create a new request for %s", url)
 	}
 
-	auth := fmt.Sprintf("Bearer %s", c.Token)
-	req.Header.Set("Authorization", auth)
-
-	resp, err := doRequest(req)
+	resp, err := doRequest(req, c.Token)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] failed to close body for response")

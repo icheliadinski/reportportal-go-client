@@ -56,11 +56,9 @@ func (l *Launch) Start() error {
 		return errors.Wrapf(err, "failed to create request for %s", url)
 	}
 
-	auth := fmt.Sprintf("Bearer %s", l.client.Token)
-	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := doRequest(req)
+	resp, err := doRequest(req, l.client.Token)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] failed to close body for response")
@@ -102,11 +100,9 @@ func (l *Launch) Delete() error {
 		return errors.Wrapf(err, "failed to create DELETE request for %s", url)
 	}
 
-	auth := fmt.Sprintf("Bearer %s", l.client.Token)
-	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := doRequest(req)
+	resp, err := doRequest(req, l.client.Token)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] failed to close body response")
@@ -141,11 +137,9 @@ func (l *Launch) Update(description, mode string, tags []string) error {
 		return errors.Wrapf(err, "failed to create PUT request for %s", url)
 	}
 
-	auth := fmt.Sprintf("Bearer %s", l.client.Token)
-	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := doRequest(req)
+	resp, err := doRequest(req, l.client.Token)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] failed to close body response")
@@ -178,11 +172,9 @@ func (l *Launch) finalize(status, action string) error {
 		return errors.Wrapf(err, "failed to create PUT request to %s", url)
 	}
 
-	auth := fmt.Sprintf("Bearer %s", l.client.Token)
-	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := doRequest(req)
+	resp, err := doRequest(req, l.client.Token)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] Failed to close response body")
