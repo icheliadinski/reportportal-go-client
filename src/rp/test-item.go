@@ -52,6 +52,7 @@ type TestItem struct {
 	Type      string
 	UniqueId  string
 
+	client *Client
 	launch *Launch
 }
 
@@ -71,15 +72,16 @@ func NewTestItem(launch *Launch, name, description, itemType string, tags []stri
 		Tags:        tags,
 		Type:        itemType,
 		launch:      launch,
+		client:      launch.client,
 	}
 }
 
 func (ti *TestItem) Start() error {
 	var url string
 	if ti.Parent != nil {
-		url = fmt.Sprintf("%s/%s/item/%s", ti.launch.client.Endpoint, ti.launch.client.Project, ti.Parent.Id)
+		url = fmt.Sprintf("%s/%s/item/%s", ti.client.Endpoint, ti.client.Project, ti.Parent.Id)
 	} else {
-		url = fmt.Sprintf("%s/%s/item", ti.launch.client.Endpoint, ti.launch.client.Project)
+		url = fmt.Sprintf("%s/%s/item", ti.client.Endpoint, ti.client.Project)
 	}
 	data := struct {
 		Name        string   `json:"name"`
@@ -114,7 +116,7 @@ func (ti *TestItem) Start() error {
 
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := doRequest(req, ti.launch.client.Token)
+	resp, err := doRequest(req, ti.client.Token)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] failed to close response body")
@@ -140,7 +142,7 @@ func (ti *TestItem) Start() error {
 }
 
 func (ti *TestItem) Finish(status string) error {
-	url := fmt.Sprintf("%s/%s/item/%s", ti.launch.client.Endpoint, ti.launch.client.Project, ti.Id)
+	url := fmt.Sprintf("%s/%s/item/%s", ti.client.Endpoint, ti.client.Project, ti.Id)
 	data := struct {
 		EndTime int64  `json:"end_time"`
 		Status  string `json:"status"`
@@ -159,7 +161,7 @@ func (ti *TestItem) Finish(status string) error {
 
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := doRequest(req, ti.launch.client.Token)
+	resp, err := doRequest(req, ti.client.Token)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] failed to close response body")
@@ -186,7 +188,7 @@ func (ti *TestItem) Log(message, level, filename string) error {
 		return err
 	}
 
-	resp, err := doRequest(req, ti.launch.client.Token)
+	resp, err := doRequest(req, ti.client.Token)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] failed to close response body")
@@ -202,7 +204,7 @@ func (ti *TestItem) Log(message, level, filename string) error {
 }
 
 func (ti *TestItem) getReqForLogWithAttach(message, level string, filename string) (*http.Request, error) {
-	url := fmt.Sprintf("%s/%s/log", ti.launch.client.Endpoint, ti.launch.client.Project)
+	url := fmt.Sprintf("%s/%s/log", ti.client.Endpoint, ti.client.Project)
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
@@ -250,14 +252,12 @@ func (ti *TestItem) getReqForLogWithAttach(message, level string, filename strin
 		return nil, errors.Wrapf(err, "failed to create POST request to %s", url)
 	}
 
-	auth := fmt.Sprintf("Bearer %s", ti.launch.client.Token)
-	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
 	return req, nil
 }
 
 func (ti *TestItem) getReqForLog(message, level string) (*http.Request, error) {
-	url := fmt.Sprintf("%s/%s/log", ti.launch.client.Endpoint, ti.launch.client.Project)
+	url := fmt.Sprintf("%s/%s/log", ti.client.Endpoint, ti.client.Project)
 	data := struct {
 		ItemId  string `json:"item_id"`
 		Message string `json:"message"`
@@ -276,8 +276,6 @@ func (ti *TestItem) getReqForLog(message, level string) (*http.Request, error) {
 		return nil, errors.Wrapf(err, "failed to create POST request to %s", url)
 	}
 
-	auth := fmt.Sprintf("Bearer %s", ti.launch.client.Token)
-	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
 
 	return req, nil
