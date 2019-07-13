@@ -60,8 +60,7 @@ func (l *Launch) Start() error {
 	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
 
-	client := http.Client{}
-	resp, err := client.Do(req)
+	resp, err := doRequest(req)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] failed to close body for response")
@@ -107,8 +106,7 @@ func (l *Launch) Delete() error {
 	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
 
-	client := http.Client{}
-	resp, err := client.Do(req)
+	resp, err := doRequest(req)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] failed to close body response")
@@ -147,8 +145,7 @@ func (l *Launch) Update(description, mode string, tags []string) error {
 	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
 
-	client := http.Client{}
-	resp, err := client.Do(req)
+	resp, err := doRequest(req)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] failed to close body response")
@@ -185,8 +182,7 @@ func (l *Launch) finalize(status, action string) error {
 	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
 
-	client := http.Client{}
-	resp, err := client.Do(req)
+	resp, err := doRequest(req)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] Failed to close response body")

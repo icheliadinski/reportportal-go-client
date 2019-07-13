@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"mime"
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
@@ -115,8 +116,7 @@ func (ti *TestItem) Start() error {
 	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
 
-	client := http.Client{}
-	resp, err := client.Do(req)
+	resp, err := doRequest(req)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] failed to close response body")
@@ -163,8 +163,7 @@ func (ti *TestItem) Finish(status string) error {
 	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
 
-	client := http.Client{}
-	resp, err := client.Do(req)
+	resp, err := doRequest(req)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] failed to close response body")
@@ -191,8 +190,7 @@ func (ti *TestItem) Log(message, level, filename string) error {
 		return err
 	}
 
-	client := http.Client{}
-	resp, err := client.Do(req)
+	resp, err := doRequest(req)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] failed to close response body")
@@ -232,7 +230,7 @@ func (ti *TestItem) getReqForLogWithAttach(message, level string, filename strin
 	// file
 	h = make(textproto.MIMEHeader)
 	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", filepath.Base(filename)))
-	h.Set("Content-Type", "text/plain")
+	h.Set("Content-Type", mime.TypeByExtension(filepath.Ext(filename)))
 	fileWriter, err := bodyWriter.CreatePart(h)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create form file")

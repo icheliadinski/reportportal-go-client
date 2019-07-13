@@ -58,8 +58,7 @@ func (c *Client) CheckConnect() error {
 	auth := fmt.Sprintf("Bearer %s", c.Token)
 	req.Header.Set("Authorization", auth)
 
-	client := http.Client{}
-	resp, err := client.Do(req)
+	resp, err := doRequest(req)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] failed to close body for response")
@@ -74,24 +73,6 @@ func (c *Client) CheckConnect() error {
 	}
 	return nil
 }
-
-// type LogFile struct {
-// 	File            bytes.Buffer `json:"file"`
-// 	JsonRequestPart bytes.Buffer `json:"json_request_part"`
-// }
-
-// ProjectSettings defines project settings
-// type ProjectSettings struct {
-// 	StatisticsStrategy string                 `json:"statisticsStrategy"`
-// 	Name               string                 `json:"project"`
-// 	SubTypes           map[string]interface{} `json:"subTypes"`
-// }
-
-// type Attachment struct {
-// 	Name    string
-// 	Type    string
-// 	Content []byte
-// }
 
 // func (c *Client) GetProjectSettings() (ProjectSettings, error) {
 // 	url := fmt.Sprintf("%s/%s/settings", c.Endpoint, c.Project)
