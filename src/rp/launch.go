@@ -154,6 +154,7 @@ func (l *Launch) Update(description, mode string, tags []string) error {
 	return nil
 }
 
+// finalize finishes launch with specified status and action
 func (l *Launch) finalize(status, action string) error {
 	url := fmt.Sprintf("%s/%s/launch/%s/%s", l.client.Endpoint, l.client.Project, l.Id, action)
 	data := struct {
