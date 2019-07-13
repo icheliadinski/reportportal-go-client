@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -40,15 +41,22 @@ type Client struct {
 }
 
 // NewClient creates new client for ReportPortal endpoint
-func NewClient(endpoint, project, token string) *Client {
+func NewClient(endpoint, project, token string, apiVersion int) *Client {
+	endpoint = strings.TrimSuffix(endpoint, "/")
+
 	var esb strings.Builder
 	if !strings.HasPrefix(endpoint, "https://") {
 		esb.WriteString("https://")
 	}
 	esb.WriteString(endpoint)
 
-	if !strings.HasSuffix(endpoint, "/api/v1") {
-		esb.WriteString("/api/v1")
+	if apiVersion < 1 {
+		apiVersion = 1
+	}
+
+	if !strings.Contains(endpoint, "/api/v") {
+		esb.WriteString("/api/v")
+		esb.WriteString(strconv.Itoa(apiVersion))
 	}
 
 	return &Client{
