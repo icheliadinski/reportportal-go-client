@@ -1,6 +1,7 @@
 package rp
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -10,8 +11,11 @@ func toTimestamp(t time.Time) int64 {
 	return t.Unix() * int64(time.Microsecond)
 }
 
-// doRequest
-func doRequest(req *http.Request) (*http.Response, error) {
+// doRequest do request with authorization token
+func doRequest(req *http.Request, token string) (*http.Response, error) {
+	auth := fmt.Sprintf("Bearer %s", token)
+	req.Header.Set("Authorization", auth)
+
 	client := http.Client{}
 	return client.Do(req)
 }

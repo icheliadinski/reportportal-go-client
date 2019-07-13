@@ -112,11 +112,9 @@ func (ti *TestItem) Start() error {
 		return errors.Wrapf(err, "failed to create POST request to %s", url)
 	}
 
-	auth := fmt.Sprintf("Bearer %s", ti.launch.client.Token)
-	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := doRequest(req)
+	resp, err := doRequest(req, ti.launch.client.Token)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] failed to close response body")
@@ -159,11 +157,9 @@ func (ti *TestItem) Finish(status string) error {
 		return errors.Wrapf(err, "failed to create PUT request to %s", url)
 	}
 
-	auth := fmt.Sprintf("Bearer %s", ti.launch.client.Token)
-	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := doRequest(req)
+	resp, err := doRequest(req, ti.launch.client.Token)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] failed to close response body")
@@ -190,7 +186,7 @@ func (ti *TestItem) Log(message, level, filename string) error {
 		return err
 	}
 
-	resp, err := doRequest(req)
+	resp, err := doRequest(req, ti.launch.client.Token)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println("[WARN] failed to close response body")
