@@ -29,5 +29,6 @@ func TestStartLaunch(t *testing.T) {
 	l := NewLaunch(c, "test launch", "test description", "test mode", nil)
 	err := l.Start()
 
+	assert.Equal(t, "testid123", l.Id)
 	assert.NoError(t, err)
 }
