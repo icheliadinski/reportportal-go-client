@@ -37,6 +37,7 @@ func TestNewClient(t *testing.T) {
 
 func TestCheckConnect(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, "Bearer 1234", req.Header.Get("Authorization"))
 		res.WriteHeader(http.StatusOK)
 		res.Write([]byte("response"))
 	}))
