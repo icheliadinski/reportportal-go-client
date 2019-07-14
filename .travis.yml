@@ -1,8 +1,12 @@
 language: go
-
 go:
-  - 1.12.x
-  - master
-
+- 1.12.x
+- master
+before_install:
+- go get github.com/mattn/goveralls
 script:
-  - go test -v -covermode=count -coverprofile=coverage.out ./rp
+- go test -v -covermode=count -coverprofile=coverage.out ./rp
+- "$GOPATH/bin/goveralls -service=travis-ci"
+env:
+  global:
+    secure: JM15xFoENeC6stic/UzWJhT1GhOURXg5tuYD+pj4MTCjoO83n1EnzXxCQrQqxDo4sMkhcx/wSvuX5bmUqsV4EW3Svx809jUYjovgDtIenOEMd1pQYjnoyYhNp8CIU8oh7OHbTjsQW2uRv3Xvk7qn28DGp3V0j6peAj9QSwZimk5MjSjpXkkpKPj0QBGQBetkISNYKhCTyvCMKvI0aDV17drRMkFuECr/Jr5T9rQ7cGfk54kkJdgG24+n7+b/IlCxyc4Ab0vsgNGak6FCk2P2CxcmM3s/m5fT56mEJS2Kqy2+BuvuRFGpfddXOL6iak+E5Lkhipu8bKvVPI9u68TD2dYbPp6TQXBdAAxba3CBdiNBB5Kwj/gQvjR0y0ocLDuxTRl9xTw3oU/GoNOceC8c1R178/ziPqxc0M6dnRHYnQilmIDKh5kRw6SONaqm11yntAOQJrenKaLZdxMRClZkS0GY1Ay3+mo20YlqOjUOfg1Kbs+uwVWctUFYXhBTK14VvB8tdZOKxzFUmrsPdf1k4rQLAhVSRpUbqlz/ElwbVSyu5y3NGzYb8tPJ041OL+i1uS4FteWs8zS1W34s/mtzLhPA8DbcMGH1i3wmRMRpsS2VIf8+jQqnaqZEPs6f64A1WOxLN3zE9/h5w2w0XqITgxjRjr4lSzCW4MxAZCMxW9c=
