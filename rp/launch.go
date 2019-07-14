@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -59,11 +58,7 @@ func (l *Launch) Start() error {
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := doRequest(req, l.client.Token)
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Println("[WARN] failed to close body for response")
-		}
-	}()
+	defer resp.Body.Close()
 	if err != nil {
 		return errors.Wrapf(err, "failed to execute POST request %s", req.URL)
 	}
@@ -103,11 +98,7 @@ func (l *Launch) Delete() error {
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := doRequest(req, l.client.Token)
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Println("[WARN] failed to close body response")
-		}
-	}()
+	defer resp.Body.Close()
 	if err != nil {
 		return errors.Wrapf(err, "failed to execute PUT request %s", req.URL)
 	}
@@ -140,11 +131,7 @@ func (l *Launch) Update(description, mode string, tags []string) error {
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := doRequest(req, l.client.Token)
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Println("[WARN] failed to close body response")
-		}
-	}()
+	defer resp.Body.Close()
 	if err != nil {
 		return errors.Wrapf(err, "failed to execute PUT request %s", req.URL)
 	}
@@ -176,11 +163,7 @@ func (l *Launch) finalize(status, action string) error {
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := doRequest(req, l.client.Token)
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Println("[WARN] Failed to close response body")
-		}
-	}()
+	defer resp.Body.Close()
 	if err != nil {
 		return errors.Wrapf(err, "failed to execute PUT request %s", req.URL)
 	}

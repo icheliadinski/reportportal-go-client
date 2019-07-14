@@ -2,7 +2,6 @@ package rp
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -75,11 +74,7 @@ func (c *Client) CheckConnect() error {
 	}
 
 	resp, err := doRequest(req, c.Token)
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Println("[WARN] failed to close body for response")
-		}
-	}()
+	defer resp.Body.Close()
 
 	if err != nil {
 		return errors.Wrapf(err, "failed to execute GET request %s", req.URL)
