@@ -1,0 +1,18 @@
+/logs/
+/target/
+/var/
+/.vscode/
+/.idea/
+/bin/
+
+# source files
+docker-compose.yml
+
+# generated files
+*.cov
+.cover
+target
+debug
+debug.test
+*.prof
+*.test
