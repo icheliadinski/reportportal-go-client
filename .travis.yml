@@ -1,9 +1,8 @@
 language: go
 
 go:
-- 1.x
-- "1.12"
-- 1.12.x
-- master
+  - 1.12.x
+  - master
 
-script: go test -v ./rp
+script:
+  - go test -v -covermode=count -coverprofile=coverage.out ./rp
