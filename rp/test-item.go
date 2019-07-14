@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"mime"
 	"mime/multipart"
 	"net/http"
@@ -124,11 +123,7 @@ func (ti *TestItem) Start() error {
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := doRequest(req, ti.client.Token)
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Println("[WARN] failed to close response body")
-		}
-	}()
+	defer resp.Body.Close()
 	if err != nil {
 		return errors.Wrapf(err, "failed to execute POST request %s", req.URL)
 	}
@@ -170,11 +165,7 @@ func (ti *TestItem) Finish(status string) error {
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := doRequest(req, ti.client.Token)
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Println("[WARN] failed to close response body")
-		}
-	}()
+	defer resp.Body.Close()
 	if err != nil {
 		return errors.Wrapf(err, "failed to execute PUT request to %s", req.URL)
 	}
@@ -198,11 +189,7 @@ func (ti *TestItem) Log(message, level, filePath string) error {
 	}
 
 	resp, err := doRequest(req, ti.client.Token)
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Println("[WARN] failed to close response body")
-		}
-	}()
+	defer resp.Body.Close()
 	if err != nil {
 		return errors.Wrapf(err, "failed to execute POST request %s", req.URL)
 	}
@@ -256,22 +243,14 @@ func (ti *TestItem) getReqForLogWithAttach(message, level string, filePath strin
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open file")
 	}
-	defer func() {
-		if err := fh.Close(); err != nil {
-			log.Printf("[WARN] failed to close file %s", filePath)
-		}
-	}()
+	defer fh.Close()
 
 	_, err = io.Copy(fileWriter, fh)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to copy file writer")
 	}
 
-	defer func() {
-		if err := bodyWriter.Close(); err != nil {
-			log.Println("[WARN] Failed to close body")
-		}
-	}()
+	defer bodyWriter.Close()
 
 	req, err := http.NewRequest(http.MethodPost, url, bodyBuf)
 	if err != nil {
