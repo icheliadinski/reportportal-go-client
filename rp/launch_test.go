@@ -64,3 +64,7 @@ func TestStartLaunch(t *testing.T) {
 		assert.Equal(t, err.Error(), "failed with status 200 OK")
 	})
 }
+
+func TestStopLaunch(t *testing.T) {
+
+}
