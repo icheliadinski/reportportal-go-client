@@ -250,7 +250,7 @@ func (ti *TestItem) getReqForLogWithAttach(message, level string, filePath strin
 		return nil, errors.Wrap(err, "failed to copy file writer")
 	}
 
-	defer bodyWriter.Close()
+	bodyWriter.Close()
 
 	req, err := http.NewRequest(http.MethodPost, url, bodyBuf)
 	if err != nil {
