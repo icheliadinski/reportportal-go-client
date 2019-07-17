@@ -1,4 +1,4 @@
-module github.com/icheliadinski/reportportal-go-client
+module github.com/icheliadinski/client-go
 
 go 1.12
 
