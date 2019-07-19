@@ -24,6 +24,7 @@ func TestStartLaunch(t *testing.T) {
 			w.Write([]byte(okResponse))
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		c := &Client{
 			Endpoint: s.URL,
@@ -43,6 +44,7 @@ func TestStartLaunch(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		c := &Client{
 			Endpoint: s.URL,
@@ -68,6 +70,7 @@ func TestFinalizeLaunch(t *testing.T) {
 			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		c := &Client{
 			Endpoint: s.URL,
@@ -85,6 +88,7 @@ func TestFinalizeLaunch(t *testing.T) {
 			w.WriteHeader(http.StatusInternalServerError)
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		c := &Client{
 			Endpoint: s.URL,
@@ -103,6 +107,7 @@ func TestStopLaunch(t *testing.T) {
 		assert.Equal(t, "/test_project/launch/id123/stop", r.URL.Path)
 	})
 	s := httptest.NewServer(h)
+	defer s.Close()
 
 	c := &Client{
 		Endpoint: s.URL,
@@ -122,6 +127,7 @@ func TestFinishLaunch(t *testing.T) {
 		assert.Equal(t, "/test_project/launch/id123/finish", r.URL.Path)
 	})
 	s := httptest.NewServer(h)
+	defer s.Close()
 
 	c := &Client{
 		Endpoint: s.URL,
@@ -144,6 +150,8 @@ func TestDeleteLaunch(t *testing.T) {
 			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
+
 		c := &Client{
 			Endpoint: s.URL,
 			Project:  "test_project",
@@ -153,7 +161,6 @@ func TestDeleteLaunch(t *testing.T) {
 			Id:     "id123",
 		}
 		err := l.Delete()
-
 		assert.NoError(t, err)
 	})
 
@@ -162,6 +169,8 @@ func TestDeleteLaunch(t *testing.T) {
 			w.WriteHeader(http.StatusInternalServerError)
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
+
 		c := &Client{
 			Endpoint: s.URL,
 		}
@@ -169,7 +178,6 @@ func TestDeleteLaunch(t *testing.T) {
 			client: c,
 		}
 		err := l.Delete()
-
 		assert.EqualError(t, err, "failed with status 500 Internal Server Error")
 	})
 }
@@ -186,6 +194,7 @@ func TestUpdateLaunch(t *testing.T) {
 			assert.Equal(t, `{"description":"new description","mode":"new mode","tags":["new","tags"]}`, string(d))
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		c := &Client{
 			Endpoint: s.URL,
@@ -205,6 +214,7 @@ func TestUpdateLaunch(t *testing.T) {
 			w.WriteHeader(http.StatusInternalServerError)
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		c := &Client{
 			Endpoint: s.URL,
