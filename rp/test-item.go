@@ -5,12 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"mime"
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/pkg/errors"
@@ -52,6 +49,13 @@ type TestItem struct {
 
 	client *Client
 	launch *Launch
+}
+
+// Attachment defines attachment for log request with file
+type Attachment struct {
+	Name     string
+	Data     io.Reader
+	MimeType string
 }
 
 // fileInfo defines file structure for json request part
@@ -176,11 +180,11 @@ func (ti *TestItem) Finish(status string) error {
 }
 
 // Log sends log for specified test item
-func (ti *TestItem) Log(message, level, filePath string) error {
+func (ti *TestItem) Log(message, level string, attachment *Attachment) error {
 	var req *http.Request
 	var err error
-	if filePath != "" {
-		req, err = ti.getReqForLogWithAttach(message, level, filePath)
+	if attachment != nil {
+		req, err = ti.getReqForLogWithAttach(message, level, attachment)
 	} else {
 		req, err = ti.getReqForLog(message, level)
 	}
@@ -200,11 +204,10 @@ func (ti *TestItem) Log(message, level, filePath string) error {
 }
 
 // getReqForLogWithAttach creates request to perform log request with message and attachment
-func (ti *TestItem) getReqForLogWithAttach(message, level string, filePath string) (*http.Request, error) {
+func (ti *TestItem) getReqForLogWithAttach(message, level string, attachment *Attachment) (*http.Request, error) {
 	url := fmt.Sprintf("%s/%s/log", ti.client.Endpoint, ti.client.Project)
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
-	fname := filepath.Base(filePath)
 
 	// json request part
 	h := make(textproto.MIMEHeader)
@@ -215,7 +218,7 @@ func (ti *TestItem) getReqForLogWithAttach(message, level string, filePath strin
 		return nil, errors.Wrap(err, "failed to create form file")
 	}
 
-	f := &fileInfo{fname}
+	f := &fileInfo{attachment.Name}
 	jsonReqPart := &jsonRequestPart{
 		{f, ti.Id, level, message, toTimestamp(time.Now())},
 	}
@@ -232,20 +235,15 @@ func (ti *TestItem) getReqForLogWithAttach(message, level string, filePath strin
 
 	// file
 	h = make(textproto.MIMEHeader)
-	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", fname))
-	h.Set("Content-Type", mime.TypeByExtension(fname))
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", attachment.Name))
+	h.Set("Content-Type", attachment.MimeType)
+
 	fileWriter, err := bodyWriter.CreatePart(h)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create form file")
 	}
 
-	fh, err := os.Open(filePath)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to open file")
-	}
-	defer fh.Close()
-
-	_, err = io.Copy(fileWriter, fh)
+	_, err = io.Copy(fileWriter, attachment.Data)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to copy file writer")
 	}
