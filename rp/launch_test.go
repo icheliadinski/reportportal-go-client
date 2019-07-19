@@ -1,6 +1,7 @@
 package rp
 
 import (
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -66,5 +67,29 @@ func TestStartLaunch(t *testing.T) {
 }
 
 func TestStopLaunch(t *testing.T) {
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, r.URL.Path, "/test_project/launch/id123/stop")
+		assert.Equal(t, "PUT", r.Method)
 
+		d, err := ioutil.ReadAll(r.Body)
+		assert.NoError(t, err)
+		assert.Contains(t, string(d), `"status":"test status"`)
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+	})
+	s := httptest.NewServer(h)
+
+	c := &Client{
+		Endpoint: s.URL,
+		Project:  "test_project",
+	}
+	l := &Launch{
+		client: c,
+		Name:   "test launch",
+		Mode:   "test mode",
+		Tags:   nil,
+		Id:     "id123",
+	}
+	err := l.Stop("test status")
+
+	assert.NoError(t, err)
 }
