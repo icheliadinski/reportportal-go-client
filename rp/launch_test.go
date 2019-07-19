@@ -46,7 +46,6 @@ func TestStartLaunch(t *testing.T) {
 
 		c := &Client{
 			Endpoint: s.URL,
-			Project:  "test_project",
 		}
 		l := &Launch{
 			client: c,
@@ -72,7 +71,6 @@ func TestFinalizeLaunch(t *testing.T) {
 
 		c := &Client{
 			Endpoint: s.URL,
-			Project:  "test_project",
 		}
 		l := &Launch{
 			client: c,
@@ -90,7 +88,6 @@ func TestFinalizeLaunch(t *testing.T) {
 
 		c := &Client{
 			Endpoint: s.URL,
-			Project:  "test_project",
 		}
 		l := &Launch{
 			client: c,
@@ -153,9 +150,6 @@ func TestDeleteLaunch(t *testing.T) {
 		}
 		l := &Launch{
 			client: c,
-			Name:   "test launch",
-			Mode:   "test mode",
-			Tags:   nil,
 			Id:     "id123",
 		}
 		err := l.Delete()
@@ -170,17 +164,55 @@ func TestDeleteLaunch(t *testing.T) {
 		s := httptest.NewServer(h)
 		c := &Client{
 			Endpoint: s.URL,
+		}
+		l := &Launch{
+			client: c,
+		}
+		err := l.Delete()
+
+		assert.EqualError(t, err, "failed with status 500 Internal Server Error")
+	})
+}
+
+func TestUpdateLaunch(t *testing.T) {
+	t.Run("Successful update", func(t *testing.T) {
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/test_project/launch/id123/update", r.URL.Path)
+			assert.Equal(t, "PUT", r.Method)
+			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+			d, err := ioutil.ReadAll(r.Body)
+			assert.NoError(t, err)
+			assert.Equal(t, `{"description":"new description","mode":"new mode","tags":["new","tags"]}`, string(d))
+		})
+		s := httptest.NewServer(h)
+
+		c := &Client{
+			Endpoint: s.URL,
 			Project:  "test_project",
 		}
 		l := &Launch{
 			client: c,
-			Name:   "test launch",
-			Mode:   "test mode",
-			Tags:   nil,
 			Id:     "id123",
 		}
-		err := l.Delete()
 
+		err := l.Update("new description", "new mode", []string{"new", "tags"})
+		assert.NoError(t, err)
+	})
+
+	t.Run("Wrong status code fail", func(t *testing.T) {
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+		s := httptest.NewServer(h)
+
+		c := &Client{
+			Endpoint: s.URL,
+		}
+		l := &Launch{
+			client: c,
+		}
+		err := l.Update("", "", nil)
 		assert.EqualError(t, err, "failed with status 500 Internal Server Error")
 	})
 }
