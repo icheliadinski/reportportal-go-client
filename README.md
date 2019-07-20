@@ -13,10 +13,10 @@ go get github.com/icheliadinski/client-go/rp
 
 ## Example
 ```go
-	c := rp.NewClient("your rp endpoint", "project name", "secret token", 1)
-	if err := c.CheckConnect(); err != nil {
-		// handle error
-	}
+c := rp.NewClient("your rp endpoint", "project name", "secret token", 1)
+if err := c.CheckConnect(); err != nil {
+  // handle error
+}
 ```
 
 ## Settings
