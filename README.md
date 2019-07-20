@@ -44,10 +44,10 @@ if err := c.CheckConnect(); err != nil {
 ```go
 l := rp.NewLaunch(c, "Launch name", "Description", rp.ModeDefault, []string{"tag1", "tag2"})
 ```
-Arguments:
+
 Parameter   | Description
 ----------- | -----------
-client      | report portal client created by NewClient function
+client      | ReportPortal client created by NewClient function
 name        | Launch name
 description | Launch description
 mode        | Launch mode (rp.ModeDefault or rp.ModeDebug)
