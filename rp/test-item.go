@@ -200,6 +200,40 @@ func (ti *TestItem) Log(message, level string, attachment *Attachment) error {
 	return nil
 }
 
+// Update updates launch
+func (ti *TestItem) Update(description string, tags []string) error {
+	url := fmt.Sprintf("%s/%s/item/%s/update", ti.client.Endpoint, ti.client.Project, ti.Id)
+	data := struct {
+		Description string   `json:"description"`
+		Tags        []string `json:"tags"`
+	}{description, tags}
+
+	b, err := json.Marshal(&data)
+	if err != nil {
+		return errors.Wrapf(err, "failed to marshal request data %v", data)
+	}
+
+	r := bytes.NewReader(b)
+	req, err := http.NewRequest(http.MethodPut, url, r)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create PUT request to %s", url)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := doRequest(req, ti.client.Token)
+	defer resp.Body.Close()
+	if err != nil {
+		return errors.Wrapf(err, "failed to execute PUT request to %s", req.URL)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return errors.Errorf("failed with status %s", resp.Status)
+	}
+	ti.Description = description
+	ti.Tags = tags
+	return nil
+}
+
 // getReqForLogWithAttach creates request to perform log request with message and attachment
 func (ti *TestItem) getReqForLogWithAttach(message, level string, attachment *Attachment) (*http.Request, error) {
 	url := fmt.Sprintf("%s/%s/log", ti.client.Endpoint, ti.client.Project)

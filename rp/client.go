@@ -110,7 +110,3 @@ func (c *Client) CheckConnect() error {
 	}
 	return nil
 }
-
-func (c *Client) Activity() error {
-
-}
