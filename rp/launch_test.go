@@ -25,7 +25,7 @@ func TestStartLaunch(t *testing.T) {
 			w.WriteHeader(http.StatusCreated)
 			w.Write([]byte(okResponse))
 		})
-		s := httptest.NewServer()
+		s := httptest.NewServer(h)
 		defer s.Close()
 
 		c := &Client{
