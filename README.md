@@ -31,7 +31,15 @@ version   | API version. Responsible for adding /v1 or /v2 etc to the API endpoi
 
 ## Api
 
-### NewClient
+### CheckConnect
+ CheckConnect - method for verifying the correctness of the client connection
+```go
+if err := c.CheckConnect(); err != nil {
+  // handle error
+}
+```
+
+### NewLaunch
  NewLaunch - creates new launch object. Returns this object
 ```go
 l := rp.NewLaunch(c, "Launch name", "Description", rp.ModeDefault, []string{"tag1", "tag2"})
@@ -44,13 +52,3 @@ name        | Launch name
 description | Launch description
 mode        | Launch mode (rp.ModeDefault or rp.ModeDebug)
 tags        | (optional) Tags list for the launch
-
-### CheckConnect
- CheckConnect - method for verifying the correctness of the client connection
-```go
-if err := c.CheckConnect(); err != nil {
-  // handle error
-}
-```
-
-### 
