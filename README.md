@@ -41,6 +41,15 @@ if err := c.CheckConnect(); err != nil {
 }
 ```
 
+#### GetDashboard
+ GetDashboard - get all dashboard resources for project. Returns Dashboard object and error
+```go
+d, err := c.GetDashboard()
+if err != nil {
+  // handle error
+}
+```
+
 ### Launch
 
 #### NewLaunch
