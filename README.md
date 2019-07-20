@@ -166,8 +166,8 @@ tags        | (optional) New launch tags
  Log - sends log for specified test item. Returns error
 ```go
 a := &rp.Attachment{
-  Name:      "test.txt",
-  Data:      strings.NewReader("some text"),
+  Name:     "test.txt",
+  Data:     strings.NewReader("some text"),
   MimeType: "text/plain",
 }
 if err := ti.Log("message", rp.LevelInfo, a); err != nil {
