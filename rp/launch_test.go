@@ -72,7 +72,7 @@ func TestFinalizeLaunch(t *testing.T) {
 			rx, _ := regexp.Compile(`\{\"status\"\:\"test status\"\,\"end\_time\"\:\d+\}`)
 			assert.Regexp(t, rx, string(d))
 		})
-		s := httptest.NewServer()
+		s := httptest.NewServer(h)
 		defer s.Close()
 
 		c := &Client{
