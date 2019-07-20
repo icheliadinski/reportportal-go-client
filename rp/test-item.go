@@ -45,7 +45,6 @@ type TestItem struct {
 	StartTime time.Time
 	Tags      []string
 	Type      string
-	UniqueId  string
 
 	client *Client
 	launch *Launch
@@ -136,14 +135,12 @@ func (ti *TestItem) Start() error {
 	}
 
 	v := struct {
-		Id       string
-		UniqueId string
+		Id string `json:"id"`
 	}{}
 	if err := json.NewDecoder(resp.Body).Decode(&v); err != nil {
 		return errors.Wrapf(err, "failed to decode response from %s", req.URL)
 	}
 	ti.Id = v.Id
-	ti.UniqueId = v.UniqueId
 	return nil
 }
 
