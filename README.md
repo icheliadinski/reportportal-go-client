@@ -127,3 +127,56 @@ name        | Test item name
 description | Test item description
 type        | Test item type (all types accessible through `rp.TestItem...` constants)
 tags        | (optional) Tags list for the test item
+parent      | (optional) Parent test item for this test item
+
+#### Start
+ Start - starts specified test item. Returns error
+```go
+if err := ti.Start(); err != nil {
+  // handle error
+}
+```
+
+#### Finish
+ Finish - finishes specified test item. Returns error
+```go
+if err := ti.Finish(rp.StatusPassed); err != nil {
+  // handle error
+}
+```
+
+Parameter | Description
+--------- | -----------
+status    | Status with which one launch should be stopped (all statuses accessible with `rp.Status...` constant)
+
+#### Update
+ Update - updates specified test item. Returns error
+```go
+if err := ti.Update("new description", []string{"new", "tags"}); err != nil {
+  // handle error
+}
+```
+
+Parameter   | Description
+----------- | -----------
+description | New test item description
+tags        | (optional) New launch tags
+
+#### Log
+ Log - sends log for specified test item. Returns error
+```go
+a := &rp.Attachment{
+  Name:      "test.txt",
+  Data:      strings.NewReader("some text"),
+  MimeType: "text/plain",
+}
+if err := ti.Log("message", rp.LevelInfo, a); err != nil {
+  // handle error
+}
+```
+
+Parameter  | Description
+---------- | -----------
+message    | Log message for test item
+level      | Log level for test item
+attachment | (optional) Attachment object with file attachment
