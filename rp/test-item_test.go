@@ -54,6 +54,33 @@ func TestStartTestItem(t *testing.T) {
 		assert.Equal(t, "testid", ti.Id)
 	})
 
+	t.Run("Valid url with parent id", func(t *testing.T) {
+		okResponse := `{"id": "testid"}`
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/test_project/item/parent123", r.URL.Path)
+
+			w.WriteHeader(http.StatusCreated)
+			w.Write([]byte(okResponse))
+		})
+		s := httptest.NewServer(h)
+
+		ti := &TestItem{
+			Parent: &TestItem{
+				Id: "parent123",
+			},
+			launch: &Launch{
+				Id: "id123",
+			},
+			client: &Client{
+				Endpoint: s.URL,
+				Project:  "test_project",
+			},
+		}
+
+		err := ti.Start()
+		assert.NoError(t, err)
+	})
+
 	t.Run("Wrong status code", func(t *testing.T) {
 		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
