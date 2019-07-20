@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,11 +27,9 @@ func TestStartTestItem(t *testing.T) {
 
 			d, err := ioutil.ReadAll(r.Body)
 			assert.NoError(t, err)
-			assert.Contains(t, string(d), `"name":"item name"`)
-			assert.Contains(t, string(d), `"description":"item description"`)
-			assert.Contains(t, string(d), `"tags":["test","tag"]`)
-			assert.Contains(t, string(d), `"type":"item type"`)
-			assert.Contains(t, string(d), `"launch_id":"id123"`)
+
+			rx, _ := regexp.Compile(`\{\"name\"\:\"item name\"\,\"description\"\:\"item description\"\,\"tags\"\:\[\"test\"\,\"tag\"\]\,\"start\_time\"\:\d+\,\"launch\_id\"\:\"id123\"\,\"type\"\:\"item type\"\,\"parameters\"\:null\}`)
+			assert.Regexp(t, rx, string(d))
 
 			w.WriteHeader(http.StatusCreated)
 			w.Write([]byte(okResponse))
@@ -151,9 +151,9 @@ func TestLogTestItem(t *testing.T) {
 
 			d, err := ioutil.ReadAll(r.Body)
 			assert.NoError(t, err)
-			assert.Contains(t, string(d), `"item_id":"item id"`)
-			assert.Contains(t, string(d), `"message":"log message"`)
-			assert.Contains(t, string(d), `"level":"log level"`)
+
+			rx, _ := regexp.Compile(`\{\"item\_id\"\:\"item id\"\,\"message\"\:\"log message\"\,\"level\"\:\"log level\"\,\"time\"\:\d+\}`)
+			assert.Regexp(t, rx, string(d))
 
 			w.WriteHeader(http.StatusCreated)
 		})
@@ -168,6 +168,43 @@ func TestLogTestItem(t *testing.T) {
 		}
 
 		err := ti.Log("log message", "log level", nil)
+		assert.NoError(t, err)
+	})
+
+	t.Run("Successful write with attachment", func(t *testing.T) {
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/test_project/log", r.URL.Path)
+			assert.Equal(t, "POST", r.Method)
+			assert.Contains(t, r.Header.Get("Content-Type"), "multipart/form-data; boundary=")
+
+			d, err := ioutil.ReadAll(r.Body)
+			assert.NoError(t, err)
+			assert.Contains(t, string(d), `Content-Disposition: form-data; name="json_request_part"`)
+			assert.Contains(t, string(d), `Content-Type: application/json`)
+
+			rx, _ := regexp.Compile(`\[\{\"file"\:\{\"name":\"test\-text\.txt"},\"item_id\"\:\"item id\"\,\"level\"\:\"log level\"\,\"message\"\:\"log message\"\,\"time\"\:\d+\}\]`)
+			assert.Regexp(t, rx, string(d))
+
+			assert.Contains(t, string(d), `Content-Disposition: form-data; name="file"; filename="test-text.txt"`)
+			assert.Contains(t, string(d), `Content-Type: text/plain`)
+			assert.Contains(t, string(d), `test text in file`)
+			w.WriteHeader(http.StatusCreated)
+		})
+		s := httptest.NewServer(h)
+
+		ti := &TestItem{
+			Id: "item id",
+			client: &Client{
+				Endpoint: s.URL,
+				Project:  "test_project",
+			},
+		}
+
+		err := ti.Log("log message", "log level", &Attachment{
+			Name:     "test-text.txt",
+			MimeType: "text/plain",
+			Data:     strings.NewReader("test text in file"),
+		})
 		assert.NoError(t, err)
 	})
 
