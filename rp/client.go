@@ -34,9 +34,9 @@ const (
 
 // Client defines a report portal client
 type Client struct {
-	Endpoint string `short:"e" long:"endpoint" env:"ENDPOINT" description:"report portal endpoint"`
-	Token    string `short:"t" long:"token" env:"TOKEN" description:"user token for report portal"`
-	Project  string `short:"p" long:"project" env:"PROJECT" description:"project name"`
+	Endpoint string
+	Token    string
+	Project  string
 }
 
 // NewClient creates new client for ReportPortal endpoint
