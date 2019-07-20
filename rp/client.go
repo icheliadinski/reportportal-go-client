@@ -66,12 +66,14 @@ type Activity struct {
 	}
 }
 
+// Widget defines widget info
 type Widget struct {
 	Id       string `json:"widgetId"`
 	Size     []int  `json:"widgetSize"`
 	Position []int  `json:"widgetPosition"`
 }
 
+// Dashboard defines dashoard info
 type Dashboard []struct {
 	Owner   string    `json:"owner"`
 	Share   bool      `json:"share"`
@@ -126,6 +128,7 @@ func (c *Client) CheckConnect() error {
 	return nil
 }
 
+// GetDashboard gets all dashboard resources for project
 func (c *Client) GetDashboard() (*Dashboard, error) {
 	url := fmt.Sprintf("%s/%s/dashboard", c.Endpoint, c.Project)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
