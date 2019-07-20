@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,6 +21,7 @@ func TestStartLaunch(t *testing.T) {
 		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 			assert.Equal(t, "/test_project/launch", r.URL.Path)
+
 			w.WriteHeader(http.StatusCreated)
 			w.Write([]byte(okResponse))
 		})
@@ -63,11 +65,13 @@ func TestFinalizeLaunch(t *testing.T) {
 	t.Run("Successful finalize", func(t *testing.T) {
 		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
+			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
 			d, err := ioutil.ReadAll(r.Body)
 			assert.NoError(t, err)
-			assert.Contains(t, string(d), `"status":"test status"`)
-			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+			rx, _ := regexp.Compile(`\{\"status\"\:\"test status\"\,\"end\_time\"\:\d+\}`)
+			assert.Regexp(t, rx, string(d))
 		})
 		s := httptest.NewServer(h)
 		defer s.Close()
