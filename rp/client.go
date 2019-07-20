@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -37,6 +38,31 @@ type Client struct {
 	Endpoint string
 	Token    string
 	Project  string
+}
+
+// Activity defines users activity on the project
+type Activity struct {
+	Content []struct {
+		ActionType string
+		ActivityId string
+		History    []struct {
+			Field    string
+			NewValue string
+			OldValue string
+		}
+		LastModifiedDate time.Time
+		LoggedObjectRef  string
+		ObjectName       string
+		ObjectType       string
+		ProjectRef       string
+		UserRef          string
+	}
+	Page struct {
+		Number        int
+		Size          int
+		TotalElements int
+		TotalPages    int
+	}
 }
 
 // NewClient creates new client for ReportPortal endpoint
@@ -83,4 +109,8 @@ func (c *Client) CheckConnect() error {
 		return errors.Errorf("failed with status %s", resp.Status)
 	}
 	return nil
+}
+
+func (c *Client) Activity() error {
+
 }
