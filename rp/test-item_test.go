@@ -100,3 +100,44 @@ func TestStartTestItem(t *testing.T) {
 		assert.EqualError(t, err, "failed with status 500 Internal Server Error")
 	})
 }
+
+func TestFinishTestItem(t *testing.T) {
+	t.Run("Successful finish", func(t *testing.T) {
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/test_project/item/id123", r.URL.Path)
+			assert.Equal(t, "PUT", r.Method)
+			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+			d, err := ioutil.ReadAll(r.Body)
+			assert.NoError(t, err)
+			assert.Contains(t, string(d), `"status":"finish status"`)
+		})
+		s := httptest.NewServer(h)
+
+		ti := &TestItem{
+			Id: "id123",
+			client: &Client{
+				Endpoint: s.URL,
+				Project:  "test_project",
+			},
+		}
+
+		err := ti.Finish("finish status")
+		assert.NoError(t, err)
+	})
+	t.Run("Wrong status code", func(t *testing.T) {
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+		s := httptest.NewServer(h)
+
+		ti := &TestItem{
+			client: &Client{
+				Endpoint: s.URL,
+				Project:  "test_project",
+			},
+		}
+		err := ti.Finish("")
+		assert.EqualError(t, err, "failed with status 500 Internal Server Error")
+	})
+}
