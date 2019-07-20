@@ -1,6 +1,7 @@
 package rp
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -65,6 +66,20 @@ type Activity struct {
 	}
 }
 
+type Widget struct {
+	Id       string `json:"widgetId"`
+	Size     []int  `json:"widgetSize"`
+	Position []int  `json:"widgetPosition"`
+}
+
+type Dashboard []struct {
+	Owner   string    `json:"owner"`
+	Share   bool      `json:"share"`
+	Id      string    `json:"id"`
+	Name    string    `json:"name"`
+	Widgets []*Widget `json:"widgets"`
+}
+
 // NewClient creates new client for ReportPortal endpoint
 func NewClient(endpoint, project, token string, apiVersion int) *Client {
 	endpoint = strings.TrimSuffix(endpoint, "/")
@@ -109,4 +124,30 @@ func (c *Client) CheckConnect() error {
 		return errors.Errorf("failed with status %s", resp.Status)
 	}
 	return nil
+}
+
+func (c *Client) GetDashboard() (*Dashboard, error) {
+	url := fmt.Sprintf("%s/%s/dashboard", c.Endpoint, c.Project)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can't create request for %s", url)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := doRequest(req, c.Token)
+	defer resp.Body.Close()
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to execute GET request for %s", url)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.Errorf("failed with status %s", resp.Status)
+	}
+
+	var d *Dashboard
+	if err := json.NewDecoder(resp.Body).Decode(&d); err != nil {
+		return nil, errors.Wrap(err, "failed to decode response for dashboard")
+	}
+	return d, nil
 }

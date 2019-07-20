@@ -46,3 +46,60 @@ func TestCheckConnect(t *testing.T) {
 	err := c.CheckConnect()
 	assert.NoError(t, err)
 }
+
+func TestDashboard(t *testing.T) {
+	t.Run("Successful result", func(t *testing.T) {
+		okResponse := `[{"owner":"user","share": true,"id":"id123","name":"main","widgets":[{"widgetId":"wid123", "widgetSize":[12,7],"widgetPosition":[0,0]}]}]`
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/test_project/dashboard", r.URL.Path)
+			assert.Equal(t, "GET", r.Method)
+			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+			w.Write([]byte(okResponse))
+		})
+		s := httptest.NewServer(h)
+
+		c := &Client{
+			Endpoint: s.URL,
+			Project:  "test_project",
+		}
+
+		expected := &Dashboard{
+			{
+				Owner: "user",
+				Share: true,
+				Id:    "id123",
+				Name:  "main",
+				Widgets: []*Widget{
+					{
+						Id:       "wid123",
+						Size:     []int{12, 7},
+						Position: []int{0, 0},
+					},
+				},
+			},
+		}
+
+		d, err := c.GetDashboard()
+		assert.NoError(t, err)
+		assert.NotNil(t, d)
+
+		assert.Equal(t, expected, d)
+	})
+
+	t.Run("Wrong status code", func(t *testing.T) {
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+		s := httptest.NewServer(h)
+
+		c := &Client{
+			Endpoint: s.URL,
+			Project:  "test_project",
+		}
+
+		d, err := c.GetDashboard()
+		assert.Nil(t, d)
+		assert.EqualError(t, err, "failed with status 500 Internal Server Error")
+	})
+}
