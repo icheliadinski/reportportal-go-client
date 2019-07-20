@@ -24,11 +24,26 @@ When creating a client instance, you need to specify the following parameters:
 
 Parameter | Description
 --------- | -----------
-endpoint  | URL of your server. For example, if you visit the page at 'https://server:8080/ui', then endpoint will be equal to 'https://server:8080/api/v1'
+endpoint  | URL of your RP server.
 project   | The name of the project in which the launches will be created.
 token     | user's token Report Portal from which you want to send requests. It can be found on the profile page of this user.
+version   | API version. Responsible for adding /v1 or /v2 etc to the API endpoint
 
 ## Api
+
+### NewClient
+ NewLaunch - creates new launch object. Returns this object
+```go
+l := rp.NewLaunch(c, "Launch name", "Description", rp.ModeDefault, []string{"tag1", "tag2"})
+```
+Arguments:
+Parameter   | Description
+----------- | -----------
+client      | report portal client created by NewClient function
+name        | Launch name
+description | Launch description
+mode        | Launch mode (rp.ModeDefault or rp.ModeDebug)
+tags        | (optional) Tags list for the launch
 
 ### CheckConnect
  CheckConnect - method for verifying the correctness of the client connection
@@ -37,3 +52,5 @@ if err := c.CheckConnect(); err != nil {
   // handle error
 }
 ```
+
+### 
