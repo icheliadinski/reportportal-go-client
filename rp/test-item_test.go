@@ -141,3 +141,50 @@ func TestFinishTestItem(t *testing.T) {
 		assert.EqualError(t, err, "failed with status 500 Internal Server Error")
 	})
 }
+
+func TestLogTestItem(t *testing.T) {
+	t.Run("Successful write without attachment", func(t *testing.T) {
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/test_project/log", r.URL.Path)
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+			d, err := ioutil.ReadAll(r.Body)
+			assert.NoError(t, err)
+			assert.Contains(t, string(d), `"item_id":"item id"`)
+			assert.Contains(t, string(d), `"message":"log message"`)
+			assert.Contains(t, string(d), `"level":"log level"`)
+
+			w.WriteHeader(http.StatusCreated)
+		})
+		s := httptest.NewServer(h)
+
+		ti := &TestItem{
+			Id: "item id",
+			client: &Client{
+				Endpoint: s.URL,
+				Project:  "test_project",
+			},
+		}
+
+		err := ti.Log("log message", "log level", nil)
+		assert.NoError(t, err)
+	})
+
+	t.Run("Wrong status code", func(t *testing.T) {
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+		s := httptest.NewServer(h)
+
+		ti := &TestItem{
+			client: &Client{
+				Endpoint: s.URL,
+				Project:  "test_project",
+			},
+		}
+
+		err := ti.Log("", "", nil)
+		assert.EqualError(t, err, "failed with status 500 Internal Server Error")
+	})
+}
