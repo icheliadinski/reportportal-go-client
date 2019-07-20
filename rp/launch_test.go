@@ -25,7 +25,7 @@ func TestStartLaunch(t *testing.T) {
 			w.WriteHeader(http.StatusCreated)
 			w.Write([]byte(okResponse))
 		})
-		s := httptest.NewServer(h)
+		s := httptest.NewServer()
 		defer s.Close()
 
 		c := &Client{
@@ -42,10 +42,9 @@ func TestStartLaunch(t *testing.T) {
 	})
 
 	t.Run("Differ status code", func(t *testing.T) {
-		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-		})
-		s := httptest.NewServer(h)
+		}))
 		defer s.Close()
 
 		c := &Client{
@@ -73,7 +72,7 @@ func TestFinalizeLaunch(t *testing.T) {
 			rx, _ := regexp.Compile(`\{\"status\"\:\"test status\"\,\"end\_time\"\:\d+\}`)
 			assert.Regexp(t, rx, string(d))
 		})
-		s := httptest.NewServer(h)
+		s := httptest.NewServer()
 		defer s.Close()
 
 		c := &Client{
@@ -107,43 +106,77 @@ func TestFinalizeLaunch(t *testing.T) {
 }
 
 func TestStopLaunch(t *testing.T) {
-	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/test_project/launch/id123/stop", r.URL.Path)
+	t.Run("Successful run", func(t *testing.T) {
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/test_project/launch/id123/stop", r.URL.Path)
+		})
+		s := httptest.NewServer(h)
+		defer s.Close()
+
+		c := &Client{
+			Endpoint: s.URL,
+			Project:  "test_project",
+		}
+		l := &Launch{
+			client: c,
+			Id:     "id123",
+		}
+		err := l.Stop("")
+
+		assert.NoError(t, err)
 	})
-	s := httptest.NewServer(h)
-	defer s.Close()
 
-	c := &Client{
-		Endpoint: s.URL,
-		Project:  "test_project",
-	}
-	l := &Launch{
-		client: c,
-		Id:     "id123",
-	}
-	err := l.Stop("")
+	t.Run("Wrong status code", func(t *testing.T) {
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+		s := httptest.NewServer(h)
+		defer s.Close()
 
-	assert.NoError(t, err)
+		l := &Launch{
+			client: &Client{
+				Endpoint: s.URL,
+			},
+		}
+		err := l.Stop("")
+		assert.EqualError(t, err, "failed with status 500 Internal Server Error")
+	})
 }
 
 func TestFinishLaunch(t *testing.T) {
-	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/test_project/launch/id123/finish", r.URL.Path)
+	t.Run("Successful finish", func(t *testing.T) {
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/test_project/launch/id123/finish", r.URL.Path)
+		})
+		s := httptest.NewServer(h)
+		defer s.Close()
+
+		l := &Launch{
+			client: &Client{
+				Endpoint: s.URL,
+				Project:  "test_project",
+			},
+			Id: "id123",
+		}
+		err := l.Finish("")
+		assert.NoError(t, err)
 	})
-	s := httptest.NewServer(h)
-	defer s.Close()
 
-	c := &Client{
-		Endpoint: s.URL,
-		Project:  "test_project",
-	}
-	l := &Launch{
-		client: c,
-		Id:     "id123",
-	}
-	err := l.Finish("")
+	t.Run("Wrong status code", func(t *testing.T) {
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+		s := httptest.NewServer(h)
+		defer s.Close()
 
-	assert.NoError(t, err)
+		l := &Launch{
+			client: &Client{
+				Endpoint: s.URL,
+			},
+		}
+		err := l.Finish("")
+		assert.EqualError(t, err, "failed with status 500 Internal Server Error")
+	})
 }
 
 func TestDeleteLaunch(t *testing.T) {

@@ -36,15 +36,32 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestCheckConnect(t *testing.T) {
-	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		res.WriteHeader(http.StatusOK)
-		res.Write([]byte("response"))
-	}))
-	defer testServer.Close()
+	t.Run("Successful check", func(t *testing.T) {
+		h := http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(http.StatusOK)
+			res.Write([]byte("response"))
+		})
+		s := httptest.NewServer(h)
+		defer s.Close()
 
-	c := NewClient(testServer.URL, "test_project", "1234", 1)
-	err := c.CheckConnect()
-	assert.NoError(t, err)
+		c := NewClient(s.URL, "test_project", "1234", 1)
+		err := c.CheckConnect()
+		assert.NoError(t, err)
+	})
+
+	t.Run("Wrong status code", func(t *testing.T) {
+		h := http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(http.StatusInternalServerError)
+		})
+		s := httptest.NewServer(h)
+		defer s.Close()
+
+		c := &Client{
+			Endpoint: s.URL,
+		}
+		err := c.CheckConnect()
+		assert.EqualError(t, err, "failed with status 500 Internal Server Error")
+	})
 }
 
 func TestDashboard(t *testing.T) {
@@ -58,6 +75,7 @@ func TestDashboard(t *testing.T) {
 			w.Write([]byte(okResponse))
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		c := &Client{
 			Endpoint: s.URL,
@@ -92,10 +110,10 @@ func TestDashboard(t *testing.T) {
 			w.WriteHeader(http.StatusInternalServerError)
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		c := &Client{
 			Endpoint: s.URL,
-			Project:  "test_project",
 		}
 
 		d, err := c.GetDashboard()
