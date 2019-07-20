@@ -35,6 +35,7 @@ func TestStartTestItem(t *testing.T) {
 			w.Write([]byte(okResponse))
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		ti := &TestItem{
 			Name:        "item name",
@@ -63,6 +64,7 @@ func TestStartTestItem(t *testing.T) {
 			w.Write([]byte(okResponse))
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		ti := &TestItem{
 			Parent: &TestItem{
@@ -86,6 +88,7 @@ func TestStartTestItem(t *testing.T) {
 			w.WriteHeader(http.StatusInternalServerError)
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		ti := &TestItem{
 			launch: &Launch{
@@ -113,6 +116,7 @@ func TestFinishTestItem(t *testing.T) {
 			assert.Contains(t, string(d), `"status":"finish status"`)
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		ti := &TestItem{
 			Id: "id123",
@@ -130,6 +134,7 @@ func TestFinishTestItem(t *testing.T) {
 			w.WriteHeader(http.StatusInternalServerError)
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		ti := &TestItem{
 			client: &Client{
@@ -158,6 +163,7 @@ func TestLogTestItem(t *testing.T) {
 			w.WriteHeader(http.StatusCreated)
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		ti := &TestItem{
 			Id: "item id",
@@ -191,6 +197,7 @@ func TestLogTestItem(t *testing.T) {
 			w.WriteHeader(http.StatusCreated)
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		ti := &TestItem{
 			Id: "item id",
@@ -213,6 +220,7 @@ func TestLogTestItem(t *testing.T) {
 			w.WriteHeader(http.StatusInternalServerError)
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		ti := &TestItem{
 			client: &Client{
@@ -234,6 +242,7 @@ func TestUpdateTestItem(t *testing.T) {
 			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		ti := &TestItem{
 			Id: "id123",
@@ -254,6 +263,7 @@ func TestUpdateTestItem(t *testing.T) {
 			w.WriteHeader(http.StatusInternalServerError)
 		})
 		s := httptest.NewServer(h)
+		defer s.Close()
 
 		ti := &TestItem{
 			Id: "id123",
