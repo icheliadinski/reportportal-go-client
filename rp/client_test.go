@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -117,6 +118,102 @@ func TestDashboard(t *testing.T) {
 		}
 
 		d, err := c.GetDashboard()
+		assert.Nil(t, d)
+		assert.EqualError(t, err, "failed with status 500 Internal Server Error")
+	})
+}
+
+func TestActivity(t *testing.T) {
+	t.Run("Successful result", func(t *testing.T) {
+		okResponse := `{
+			"content": [
+				{
+					"actionType": "test activity",
+					"activityId": "test act id",
+					"history": [
+						{
+							"field": "test field",
+							"newValue": "new value",
+							"oldValue": "old value"
+						}
+					],
+					"lastModifiedDate": "2019-07-22T10:10:10.000Z",
+					"loggedObjectRef": "object ref",
+					"objectName": "object name",
+					"objectType": "object type",
+					"projectRef": "project ref",
+					"userRef": "user ref"
+				}
+			],
+			"page": {
+				"number": 1,
+				"size": 2,
+				"totalElements": 3,
+				"totalPages": 4
+			}
+		}`
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/test_project/activity", r.URL.Path)
+			assert.Equal(t, "GET", r.Method)
+			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+			w.Write([]byte(okResponse))
+		})
+		s := httptest.NewServer(h)
+		defer s.Close()
+
+		c := &Client{
+			Endpoint: s.URL,
+			Project:  "test_project",
+		}
+
+		expected := &Activity{
+			Content: []*ActivityContent{
+				{
+					ActionType: "test activity",
+					ActivityId: "test act id",
+					History: []*ActivityHistory{
+						{
+							Field:    "test field",
+							NewValue: "new value",
+							OldValue: "old value",
+						},
+					},
+					LastModifiedDate: time.Date(2019, time.July, 22, 10, 10, 10, 0, time.UTC),
+					LoggedObjectRef:  "object ref",
+					ObjectName:       "object name",
+					ObjectType:       "object type",
+					ProjectRef:       "project ref",
+					UserRef:          "user ref",
+				},
+			},
+			Page: &ActivityPage{
+				Number:        1,
+				Size:          2,
+				TotalElements: 3,
+				TotalPages:    4,
+			},
+		}
+
+		a, err := c.GetActivity()
+		assert.NoError(t, err)
+		assert.NotNil(t, a)
+
+		assert.Equal(t, expected, a)
+	})
+
+	t.Run("Wrong status code", func(t *testing.T) {
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+		s := httptest.NewServer(h)
+		defer s.Close()
+
+		c := &Client{
+			Endpoint: s.URL,
+		}
+
+		d, err := c.GetActivity()
 		assert.Nil(t, d)
 		assert.EqualError(t, err, "failed with status 500 Internal Server Error")
 	})

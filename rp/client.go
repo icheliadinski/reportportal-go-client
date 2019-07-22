@@ -41,29 +41,38 @@ type Client struct {
 	Project  string
 }
 
+// History defines activity history
+type ActivityHistory struct {
+	Field    string `json:"field"`
+	NewValue string `json:"newValue"`
+	OldValue string `json:"oldValue"`
+}
+
+// Content defines content history
+type ActivityContent struct {
+	ActionType       string             `json:"actionType"`
+	ActivityId       string             `json:"activityId"`
+	History          []*ActivityHistory `json:"history"`
+	LastModifiedDate time.Time          `json:"lastModifiedDate"`
+	LoggedObjectRef  string             `json:"loggedObjectRef"`
+	ObjectName       string             `json:"objectName"`
+	ObjectType       string             `json:"objectType"`
+	ProjectRef       string             `json:"projectRef"`
+	UserRef          string             `json:"userRef"`
+}
+
+// Page defines page info for activity
+type ActivityPage struct {
+	Number        int `json:"number"`
+	Size          int `json:"size"`
+	TotalElements int `json:"totalElements"`
+	TotalPages    int `json:"totalPages"`
+}
+
 // Activity defines users activity on the project
 type Activity struct {
-	Content []struct {
-		ActionType string
-		ActivityId string
-		History    []struct {
-			Field    string
-			NewValue string
-			OldValue string
-		}
-		LastModifiedDate time.Time
-		LoggedObjectRef  string
-		ObjectName       string
-		ObjectType       string
-		ProjectRef       string
-		UserRef          string
-	}
-	Page struct {
-		Number        int
-		Size          int
-		TotalElements int
-		TotalPages    int
-	}
+	Content []*ActivityContent `json:"content"`
+	Page    *ActivityPage      `json:"page"`
 }
 
 // Widget defines widget info
@@ -153,4 +162,31 @@ func (c *Client) GetDashboard() (*Dashboard, error) {
 		return nil, errors.Wrap(err, "failed to decode response for dashboard")
 	}
 	return d, nil
+}
+
+// GetActivity gets all activity info for project
+func (c *Client) GetActivity() (*Activity, error) {
+	url := fmt.Sprintf("%s/%s/activity", c.Endpoint, c.Project)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can't create GET request for %s", url)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := doRequest(req, c.Token)
+	defer resp.Body.Close()
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to execute GET request for %s", req.URL)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.Errorf("failed with status %s", resp.Status)
+	}
+
+	var a *Activity
+	if err := json.NewDecoder(resp.Body).Decode(&a); err != nil {
+		return nil, errors.Wrapf(err, "failed to decode response for dashboard")
+	}
+	return a, nil
 }
