@@ -234,6 +234,12 @@ func (ti *TestItem) Update(description string, tags []string) error {
 	return nil
 }
 
+// Get activities for test item
+func (ti *TestItem) GetActivity() (*Activity, error) {
+	// TODO: Implement this
+	return nil, nil
+}
+
 // getReqForLogWithAttach creates request to perform log request with message and attachment
 func (ti *TestItem) getReqForLogWithAttach(message, level string, attachment *Attachment) (*http.Request, error) {
 	url := fmt.Sprintf("%s/%s/log", ti.client.Endpoint, ti.client.Project)
