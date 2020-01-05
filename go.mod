@@ -1,4 +1,4 @@
-module github.com/icheliadinski/client-go
+module github.com/igorexec/client-go
 
 go 1.12
 
