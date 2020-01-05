@@ -8,7 +8,7 @@ Go client for ReportPortal http://reportportal.io/
 ## Installation
 The latest version is available with:
 ```cmd
-go get github.com/icheliadinski/client-go
+go get github.com/igorexec/client-go
 ```
 
 ## Example
